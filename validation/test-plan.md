@@ -314,7 +314,7 @@ Verify that all currently installed devices operate correctly at the same time.
 - Soil moisture sensor
 - Relay module
 
-## Expected Serial Output
+## Result
 
 All currently connected devices operated correctly at the same time.
 
@@ -346,17 +346,24 @@ Calculate Vapor Pressure Deficit using air temperature and relative humidity.
 
 This test requires a confirmed BME280 sensor.
 
-## Expected Output
+## Result
 
-Example:
+Observed values:
 
-    Temperature : 25.0 °C
-    Humidity    : 60.0 %
-    VPD         : 1.27 kPa
+    Temperature : 25.60 °C
+    Humidity    : 45.99 %
+    Pressure    : 1006.73 hPa
+    VPD         : 1.77 kPa
+    Soil RAW    : 473
+    Soil Moist. : 76.7 %
+    Relay       : OFF
+
+The VPD calculation produced a valid result based on the measured
+air temperature and relative humidity.
 
 ## Status
 
-- [ ] PASS
+- [x] PASS
 - [ ] FAIL
 
 ---
@@ -373,7 +380,7 @@ Example:
 | Soil Calibration | PASS |
 | Relay Trigger | PASS |
 | Combined Test | PASS |
-| VPD Calculation | Pending |
+| VPD Calculation | PASS |
 
 ---
 
