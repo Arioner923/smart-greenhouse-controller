@@ -316,19 +316,22 @@ Verify that all currently installed devices operate correctly at the same time.
 
 ## Expected Serial Output
 
-Example:
+All currently connected devices operated correctly at the same time.
 
-    Smart Greenhouse Controller
+Observed values:
 
-    Temperature : 25.3 °C
-    Humidity    : 61.4 %
-    Pressure    : 1008.2 hPa
-    Soil RAW    : 642
+    Temperature : 26.04 °C
+    Humidity    : 45.41 %
+    Pressure    : 1006.75 hPa
+    Soil RAW    : 463
+    Soil Moist. : 79.5 %
     Relay       : OFF
+
+The relay initialized in the safe OFF state.
 
 ## Status
 
-- [ ] PASS
+- [x] PASS
 - [ ] FAIL
 
 ---
@@ -369,7 +372,7 @@ Example:
 | Soil ADC | PASS |
 | Soil Calibration | PASS |
 | Relay Trigger | PASS |
-| Combined Test | Pending |
+| Combined Test | PASS |
 | VPD Calculation | Pending |
 
 ---
