@@ -203,21 +203,52 @@ reading.
 
 Create initial reference values for soil moisture estimation.
 
-## Calibration Points
+# Test 06 - Soil Sensor Calibration
 
-Dry reference:
+## Objective
 
-    744
+Determine calibration reference values for the capacitive soil moisture sensor
+and validate its response under real soil conditions.
 
-Dry measurement details:
+## Calibration References
 
-    Average range: 744.1 - 744.7
-    Representative dry reference: 744
-    Typical spread: 1 ADC count
+Air reference:
 
-Wet reference:
+    746
 
-    __________
+Water reference:
+
+    390
+
+These values define the relative calibration scale:
+
+    0%   = Air reference
+    100% = Water reference
+
+## Real Soil Validation
+
+Dry soil:
+
+    Representative RAW value: 744
+
+Well-watered draining soil:
+
+    Observed RAW range: 469 - 481
+
+The well-watered soil measurement confirms that the sensor responds correctly
+between the dry and fully saturated reference points.
+
+## Calibration Notes
+
+The calculated percentage represents a relative moisture scale based on the
+sensor calibration.
+
+It does not represent an absolute volumetric water content measurement.
+
+## Status
+
+- [x] PASS
+- [ ] FAIL
 
 ## Future Output
 
@@ -241,7 +272,7 @@ Verify control of the ACEBOTT relay module from D5 / GPIO14.
 
 ## Safety
 
-No 230V AC load will be connected during this test.
+No 230V AC load was connected during this test.
 
 ## Procedure
 
@@ -255,14 +286,20 @@ No 230V AC load will be connected during this test.
 
 Relay type:
 
-- [ ] Active HIGH
+- [x] Active HIGH
 - [ ] Active LOW
+
+Observed behavior:
+
+    LOW  -> Relay OFF
+    HIGH -> Relay ON
+
+The relay LED turned on and the relay clicked when GPIO14 / D5 was set HIGH.
 
 ## Status
 
-- [ ] PASS
+- [x] PASS
 - [ ] FAIL
-
 ---
 
 # Test 08 - Combined Hardware Test
@@ -330,8 +367,8 @@ Example:
 | Sensor Identification | PASS |
 | Environmental Measurements | PASS |
 | Soil ADC | PASS |
-| Soil Calibration | Pending |
-| Relay Trigger | Pending |
+| Soil Calibration | PASS |
+| Relay Trigger | PASS |
 | Combined Test | Pending |
 | VPD Calculation | Pending |
 
