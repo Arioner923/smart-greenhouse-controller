@@ -156,7 +156,8 @@ Pressure:
 
 ## Objective
 
-Verify that the ESP8266 can read the analog signal from the capacitive soil moisture sensor.
+Verify that the ESP8266 can read the analog signal from the capacitive soil
+moisture sensor through the A0 input.
 
 ## Connection
 
@@ -164,23 +165,34 @@ Verify that the ESP8266 can read the analog signal from the capacitive soil mois
 
 ## Procedure
 
-1. Read the raw ADC value.
-2. Observe the value with the sensor in different moisture conditions.
-3. Verify that the reading changes.
+1. Power the soil moisture sensor from 3.3V.
+2. Keep the sensor outside the soil.
+3. Read the raw ADC value from A0.
+4. Observe the reading for approximately 20-30 seconds.
+5. Verify that the value is stable and is not permanently stuck at 0 or 1023.
 
 ## Results
 
-Dry reading:
+Sensor condition:
 
-    __________
+    Air / not inserted into soil
 
-Wet reading:
+Observed RAW range:
 
-    __________
+    734 - 746
+
+Typical stable RAW value:
+
+    746
+
+## Result
+
+The analog input responded correctly and the sensor produced a stable ADC
+reading.
 
 ## Status
 
-- [ ] PASS
+- [x] PASS
 - [ ] FAIL
 
 ---
@@ -195,7 +207,13 @@ Create initial reference values for soil moisture estimation.
 
 Dry reference:
 
-    __________
+    744
+
+Dry measurement details:
+
+    Average range: 744.1 - 744.7
+    Representative dry reference: 744
+    Typical spread: 1 ADC count
 
 Wet reference:
 
@@ -311,7 +329,7 @@ Example:
 | I2C Scan | PASS |
 | Sensor Identification | PASS |
 | Environmental Measurements | PASS |
-| Soil ADC | Pending |
+| Soil ADC | PASS |
 | Soil Calibration | Pending |
 | Relay Trigger | Pending |
 | Combined Test | Pending |
