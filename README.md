@@ -143,7 +143,7 @@ smart-greenhouse-controller/
 ├── docs/
 ├── validation/
 └── assets/
-
+```
 Copyright
 Copyright © 2026 Arioner923. All rights reserved.
 This repository is publicly available for viewing and educational
