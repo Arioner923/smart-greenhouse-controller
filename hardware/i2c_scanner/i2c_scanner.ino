@@ -26,7 +26,7 @@ const uint8_t SCL_PIN = D1;
 void setup()
 {
     // Start serial communication for diagnostic output.
-    Serial.begin(74880);
+    Serial.begin(115200);
 
     delay(1000);
 

@@ -39,7 +39,7 @@ uint8_t readRegister(uint8_t reg)
 
 void setup()
 {
-    Serial.begin(74880);
+    Serial.begin(115200);
     delay(1000);
 
     Wire.begin(SDA_PIN, SCL_PIN);

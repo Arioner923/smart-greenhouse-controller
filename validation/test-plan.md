@@ -49,7 +49,7 @@ The board boots without:
 
 ## Status
 
-- [ ] PASS
+- [x] PASS
 - [ ] FAIL
 
 ---
@@ -83,7 +83,7 @@ or
 
 ## Status
 
-- [ ] PASS
+- [x] PASS
 - [ ] FAIL
 
 ---
@@ -106,7 +106,7 @@ BME280 is preferred because it supports:
 
 ## Status
 
-- [ ] PASS
+- [x] PASS
 - [ ] FAIL
 
 Detected sensor:
@@ -135,19 +135,19 @@ Values should be stable and physically reasonable.
 
 Temperature:
 
-    __________ °C
+     25.06 - 25.11 °C
 
 Relative Humidity:
 
-    __________ %
+    47.85 - 48.35 %
 
 Pressure:
 
-    __________ hPa
+    1008.22 - 1008.26 hPa
 
 ## Status
 
-- [ ] PASS
+- [x] PASS
 - [ ] FAIL
 
 ---
@@ -307,10 +307,10 @@ Example:
 
 | Test | Status |
 |---|---|
-| ESP8266 Boot | Pending |
-| I2C Scan | Pending |
-| Sensor Identification | Pending |
-| Environmental Measurements | Pending |
+| ESP8266 Boot | PASS |
+| I2C Scan | PASS |
+| Sensor Identification | PASS |
+| Environmental Measurements | PASS |
 | Soil ADC | Pending |
 | Soil Calibration | Pending |
 | Relay Trigger | Pending |
