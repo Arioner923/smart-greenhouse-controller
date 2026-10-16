@@ -37,3 +37,8 @@ D5 / GPIO14  -> Relay Signal
 3.3V         -> BME280 + Soil Sensor
 5V           -> Relay Module
 GND          -> Common Ground
+```
+
+Notes
+The shield has been designed so that sensors can be disconnected and replaced without desoldering the main controller board.
+The relay control side operates at low voltage. Any future mains-voltage wiring must be kept physically isolated from the prototype shield.
