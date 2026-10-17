@@ -43,9 +43,15 @@ Verify that the WeMos D1 R2 boots correctly with the prototype shield installed.
 
 The board boots without:
 
-- continuous resets
-- abnormal heating
+- Continuous resets
+- Abnormal heating
 - USB disconnections
+
+## Result
+
+The ESP8266 booted normally with the prototype shield installed.
+
+No continuous resets, abnormal heating or USB disconnections were observed.
 
 ## Status
 
@@ -78,8 +84,19 @@ At least one I2C device should be detected.
 Expected BME280/BMP280 address:
 
 - 0x76
-or
 - 0x77
+
+## Result
+
+Devices detected:
+
+    1
+
+Detected I2C address:
+
+    0x76
+
+The environmental sensor responded consistently during repeated I2C scans.
 
 ## Status
 
@@ -98,20 +115,36 @@ Determine whether the installed GY-BME/P280 module contains a BME280 or BMP280 s
 
 The firmware should identify the sensor correctly.
 
-BME280 is preferred because it supports:
+A BME280 provides:
 
-- Temperature
+- Air temperature
 - Relative humidity
 - Atmospheric pressure
+
+## Result
+
+Detected sensor:
+
+    BME280
+
+I2C address:
+
+    0x76
+
+Chip ID:
+
+    0x60
+
+Supported measurements:
+
+    Temperature : YES
+    Humidity    : YES
+    Pressure    : YES
 
 ## Status
 
 - [x] PASS
 - [ ] FAIL
-
-Detected sensor:
-
-    ______________________
 
 ---
 
@@ -119,7 +152,7 @@ Detected sensor:
 
 ## Objective
 
-Verify valid sensor readings.
+Verify valid environmental sensor readings.
 
 ## Measurements
 
@@ -135,7 +168,7 @@ Values should be stable and physically reasonable.
 
 Temperature:
 
-     25.06 - 25.11 °C
+    25.06 - 25.11 °C
 
 Relative Humidity:
 
@@ -144,6 +177,8 @@ Relative Humidity:
 Pressure:
 
     1008.22 - 1008.26 hPa
+
+The measurements remained stable during the observation period.
 
 ## Status
 
@@ -201,12 +236,6 @@ reading.
 
 ## Objective
 
-Create initial reference values for soil moisture estimation.
-
-# Test 06 - Soil Sensor Calibration
-
-## Objective
-
 Determine calibration reference values for the capacitive soil moisture sensor
 and validate its response under real soil conditions.
 
@@ -250,18 +279,6 @@ It does not represent an absolute volumetric water content measurement.
 - [x] PASS
 - [ ] FAIL
 
-## Future Output
-
-The calibrated readings will later be converted to an estimated percentage:
-
-    0%   = Dry reference
-    100% = Wet reference
-
-## Status
-
-- [ ] PASS
-- [ ] FAIL
-
 ---
 
 # Test 07 - Relay Trigger Test
@@ -300,6 +317,7 @@ The relay LED turned on and the relay clicked when GPIO14 / D5 was set HIGH.
 
 - [x] PASS
 - [ ] FAIL
+
 ---
 
 # Test 08 - Combined Hardware Test
@@ -340,7 +358,7 @@ The relay initialized in the safe OFF state.
 
 ## Objective
 
-Calculate Vapor Pressure Deficit using air temperature and relative humidity.
+Calculate Vapor Pressure Deficit using measured air temperature and relative humidity.
 
 ## Requirement
 
@@ -358,8 +376,8 @@ Observed values:
     Soil Moist. : 76.7 %
     Relay       : OFF
 
-The VPD calculation produced a valid result based on the measured
-air temperature and relative humidity.
+The VPD calculation produced a valid result based on the measured air
+temperature and relative humidity.
 
 ## Status
 
@@ -379,13 +397,35 @@ air temperature and relative humidity.
 | Soil ADC | PASS |
 | Soil Calibration | PASS |
 | Relay Trigger | PASS |
-| Combined Test | PASS |
+| Combined Hardware Test | PASS |
 | VPD Calculation | PASS |
+
+---
+
+## Validation Outcome
+
+The initial hardware validation milestone was completed successfully.
+
+The following functions have been verified:
+
+- ESP8266 operation
+- I2C communication
+- BME280 identification
+- Environmental sensing
+- Soil moisture ADC acquisition
+- Soil moisture calibration
+- Relay control
+- Simultaneous hardware operation
+- Air VPD calculation
+
+The prototype is ready to proceed to the modular firmware and automatic
+VPD control development phase.
 
 ---
 
 ## Notes
 
-Test results, Serial Monitor screenshots and selected hardware photos may be added as validation evidence.
+Serial Monitor screenshots and selected hardware photographs are stored as
+validation evidence.
 
-Only verified results should be marked as PASS.
+Only experimentally verified results are marked as PASS.
