@@ -73,10 +73,18 @@ constexpr uint8_t RELAY_OFF_LEVEL = LOW;
  *
  * A future web interface may allow this value to be changed
  * without uploading new firmware.
+ * 
+ * Select ONE growth stage:
+ *
+ * GrowthStage::PropagationEarlyVeg
+ * GrowthStage::LateVegEarlyFlower
+ * GrowthStage::MidLateFlower
  */
 
 constexpr GrowthStage SELECTED_GROWTH_STAGE =
+    // GrowthStage::PropagationEarlyVeg;
     GrowthStage::MidLateFlower;
+    // GrowthStage::LateVegEarlyFlower;
 
 
 /* =========================================================

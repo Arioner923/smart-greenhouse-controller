@@ -247,3 +247,122 @@ The control module correctly:
 Serial Monitor screenshots:
 
     control-module-integration-pass.png
+
+---
+
+# SW-04 - Automatic VPD Control Integration
+
+## Objective
+
+Verify the complete automatic VPD control data flow using live environmental
+sensor measurements.
+
+The test validates the full path:
+
+    BME280
+      ↓
+    Sensor Module
+      ↓
+    Air VPD Calculation
+      ↓
+    Growth-Stage Profile
+      ↓
+    Control Logic
+      ↓
+    Humidifier Relay
+
+## Hardware
+
+- WeMos D1 R2 V2.1.0 / ESP8266
+- BME280
+- Capacitive soil moisture sensor
+- ACEBOTT 5V relay module
+
+No 230V AC load was connected during this validation.
+
+## Test 1 - In-Range VPD
+
+Selected profile:
+
+    Mid / Late Flower
+
+Configured profile:
+
+    Minimum VPD : 1.20 kPa
+    Target VPD  : 1.40 kPa
+    Maximum VPD : 1.60 kPa
+
+Observed values:
+
+    Temperature : 24.91 °C
+    Humidity    : 58.79 %
+    Pressure    : 1010.16 hPa
+    Soil RAW    : 737
+    Soil Moist. : 2.5 %
+    Air VPD     : 1.30 kPa
+
+Controller output:
+
+    VPD Status  : IN RANGE
+    Humidifier  : OFF
+    Control     : ACTIVE
+
+The controller correctly kept the humidifier OFF because the measured
+Air VPD was inside the selected profile range.
+
+## Test 2 - High VPD
+
+For validation, the selected growth-stage profile was temporarily changed to:
+
+    Propagation / Early Veg
+
+Configured profile:
+
+    Minimum VPD : 0.40 kPa
+    Target VPD  : 0.60 kPa
+    Maximum VPD : 0.80 kPa
+
+Observed values:
+
+    Temperature : 24.92 °C
+    Humidity    : 58.95 %
+    Pressure    : 1010.22 hPa
+    Soil RAW    : 738
+    Soil Moist. : 2.2 %
+    Air VPD     : 1.29 kPa
+
+Controller output:
+
+    VPD Status  : HIGH
+    Humidifier  : ON
+    Control     : ACTIVE
+
+The controller correctly identified that the measured Air VPD exceeded
+the selected profile maximum and automatically activated the humidifier relay.
+
+## Result
+
+The complete automatic VPD control chain operated successfully using live
+sensor measurements.
+
+The firmware successfully:
+
+- Acquired live environmental measurements.
+- Calculated Air VPD.
+- Applied the selected growth-stage profile.
+- Classified the current VPD condition.
+- Kept the humidifier OFF when VPD was inside the selected range.
+- Activated the humidifier automatically when VPD exceeded the maximum limit.
+- Maintained active automatic control using real sensor data.
+
+## Status
+
+- [x] PASS
+- [ ] FAIL
+
+## Evidence
+
+Serial Monitor screenshots:
+
+    automatic-vpd-control-in-range-pass.png
+    automatic-vpd-control-high-pass.png

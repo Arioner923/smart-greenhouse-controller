@@ -220,7 +220,7 @@ are stored in the `validation` documentation.
 - [x] VPD calculation module implemented
 - [x] VPD module integration validated
 - [x] Control module implemented
-- [ ] Automatic VPD control validated
+- [x] Automatic VPD control validated
 
 ### Hardware Validation
 

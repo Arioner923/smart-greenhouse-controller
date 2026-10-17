@@ -1,69 +1,136 @@
 #include <Arduino.h>
+#include <math.h>
 
 #include "config.h"
 #include "types.h"
+#include "sensors.h"
+#include "vpd.h"
 #include "control.h"
 
 
-void runControlTest(
-    const char* testName,
-    float testVPD,
-    bool inputValid
+/*
+ * Smart Greenhouse Controller
+ * Main Application
+ *
+ * Current data flow:
+ *
+ * Sensors
+ *    ↓
+ * SensorData
+ *    ↓
+ * Air VPD
+ *    ↓
+ * Growth-stage profile
+ *    ↓
+ * Control logic
+ *    ↓
+ * Humidifier relay
+ */
+
+
+/*
+ * Stores the time of the previous measurement cycle.
+ *
+ * This allows the controller to read the sensors at the
+ * configured interval without continuously flooding the
+ * Serial Monitor.
+ */
+static unsigned long lastMeasurementTime = 0;
+
+
+/*
+ * Print the current system state to the Serial Monitor.
+ */
+static void printSystemStatus(
+    const SensorData& data,
+    float airVPD,
+    const ControlState& controlState
 )
 {
     const VPDProfile& profile =
         getActiveVPDProfile();
 
-    ControlState state =
-        updateVPDControl(testVPD, inputValid);
-
     Serial.println("--------------------------------");
 
-    Serial.print("Test          : ");
-    Serial.println(testName);
+    Serial.print("Growth Stage : ");
+    Serial.println(profile.name);
 
-    if (inputValid)
+    Serial.println();
+
+    if (data.environmentalSensorValid)
     {
-        Serial.print("Input VPD     : ");
-        Serial.print(testVPD, 2);
+        Serial.print("Temperature  : ");
+        Serial.print(data.temperature, 2);
+        Serial.println(" C");
+
+        Serial.print("Humidity     : ");
+        Serial.print(data.humidity, 2);
+        Serial.println(" %");
+
+        Serial.print("Pressure     : ");
+        Serial.print(data.pressure, 2);
+        Serial.println(" hPa");
+    }
+    else
+    {
+        Serial.println("Environmental sensor data: INVALID");
+    }
+
+    Serial.println();
+
+    Serial.print("Soil RAW     : ");
+    Serial.println(data.soilRaw);
+
+    Serial.print("Soil Moist.  : ");
+    Serial.print(data.soilPercent, 1);
+    Serial.println(" %");
+
+    Serial.println();
+
+    if (!isnan(airVPD))
+    {
+        Serial.print("Air VPD      : ");
+        Serial.print(airVPD, 2);
         Serial.println(" kPa");
     }
     else
     {
-        Serial.println("Input VPD     : INVALID");
+        Serial.println("Air VPD      : INVALID");
     }
 
-    Serial.print("Profile       : ");
-    Serial.println(profile.name);
-
-    Serial.print("Target        : ");
+    Serial.print("Target       : ");
     Serial.print(profile.targetVPD, 2);
     Serial.println(" kPa");
 
-    Serial.print("Range         : ");
+    Serial.print("Range        : ");
     Serial.print(profile.minVPD, 2);
     Serial.print(" - ");
     Serial.print(profile.maxVPD, 2);
     Serial.println(" kPa");
 
-    if (state.controlValid)
+    if (controlState.controlValid)
     {
-        Serial.print("VPD Status    : ");
+        Serial.print("VPD Status   : ");
         Serial.println(
-            vpdStatusToString(state.vpdStatus)
+            vpdStatusToString(controlState.vpdStatus)
         );
     }
     else
     {
-        Serial.println("VPD Status    : INVALID");
+        Serial.println("VPD Status   : INVALID");
     }
 
-    Serial.print("Humidifier    : ");
+    Serial.println();
+
+    Serial.print("Humidifier   : ");
     Serial.println(
-        state.humidifierOn ? "ON" : "OFF"
+        controlState.humidifierOn ? "ON" : "OFF"
     );
 
-    delay(3000);
+    Serial.print("Control      : ");
+    Serial.println(
+        controlState.controlValid ? "ACTIVE" : "FAIL-SAFE"
+    );
 }
 
 
@@ -76,112 +143,139 @@ void setup()
     Serial.println();
     Serial.println("================================");
     Serial.println(" Smart Greenhouse Controller");
-    Serial.println(" Control Module Integration Test");
+    Serial.println(" Automatic VPD Control");
     Serial.println("================================");
     Serial.println();
+
 
     /*
      * IMPORTANT:
      *
-     * Control is initialized before any automatic
-     * decisions so that the relay starts safely OFF.
+     * Initialize the control system first.
+     *
+     * This immediately configures the relay output and
+     * places the humidifier in the safe OFF state before
+     * sensor initialization begins.
      */
     initializeControl();
+
+
+    /*
+     * Initialize the connected sensors.
+     */
+    if (!initializeSensors())
+    {
+        Serial.println("ERROR: Sensor initialization failed.");
+        Serial.println("Automatic VPD control disabled.");
+        Serial.println("Humidifier remains OFF.");
+
+        /*
+         * The relay has already been initialized OFF.
+         *
+         * Stop normal execution because automatic control
+         * cannot operate safely without the environmental sensor.
+         */
+        while (true)
+        {
+            delay(1000);
+        }
+    }
+
+
+    Serial.println("Sensor initialization : PASS");
+    Serial.println("Control initialization: PASS");
+
+    Serial.println();
 
     const VPDProfile& profile =
         getActiveVPDProfile();
 
-    Serial.print("Selected Profile: ");
+    Serial.print("Selected Profile      : ");
     Serial.println(profile.name);
 
+    Serial.print("Target VPD            : ");
+    Serial.print(profile.targetVPD, 2);
+    Serial.println(" kPa");
+
+    Serial.print("VPD Range             : ");
+    Serial.print(profile.minVPD, 2);
+    Serial.print(" - ");
+    Serial.print(profile.maxVPD, 2);
+    Serial.println(" kPa");
+
     Serial.println();
-
-
-    /*
-     * Test 1:
-     *
-     * VPD above maximum.
-     *
-     * Expected:
-     * HIGH / Humidifier ON
-     */
-    runControlTest(
-        "HIGH VPD",
-        1.70f,
-        true
-    );
-
-
-    /*
-     * Test 2:
-     *
-     * VPD inside the range but still above target.
-     *
-     * The humidifier should remain ON because it was
-     * activated during Test 1.
-     *
-     * This validates hysteresis.
-     */
-    runControlTest(
-        "HYSTERESIS HOLD",
-        1.50f,
-        true
-    );
-
-
-    /*
-     * Test 3:
-     *
-     * VPD reaches target.
-     *
-     * Expected:
-     * Humidifier OFF
-     */
-    runControlTest(
-        "TARGET REACHED",
-        1.40f,
-        true
-    );
-
-
-    /*
-     * Test 4:
-     *
-     * VPD below minimum.
-     *
-     * Expected:
-     * LOW / Humidifier OFF
-     */
-    runControlTest(
-        "LOW VPD",
-        1.10f,
-        true
-    );
-
-
-    /*
-     * Test 5:
-     *
-     * Invalid environmental input.
-     *
-     * Expected:
-     * Fail-safe relay OFF
-     */
-    runControlTest(
-        "INVALID INPUT",
-        NAN,
-        false
-    );
-
-
-    Serial.println("--------------------------------");
-    Serial.println("Control test sequence complete.");
 }
 
 
 void loop()
 {
+    const unsigned long currentTime = millis();
+
     /*
-     * No repeated test cycle is required.
+     * Execute one measurement/control cycle at the
+     * configured interval.
      */
+    if (currentTime - lastMeasurementTime <
+        SENSOR_READ_INTERVAL_MS)
+    {
+        return;
+    }
+
+    lastMeasurementTime = currentTime;
+
+
+    /*
+     * STEP 1:
+     * Acquire real sensor measurements.
+     */
+    const SensorData data =
+        readSensors();
+
+
+    /*
+     * STEP 2:
+     * Calculate Air VPD only when the environmental
+     * measurements are valid.
+     */
+    float airVPD = NAN;
+
+    if (data.environmentalSensorValid)
+    {
+        airVPD = calculateAirVPD(
+            data.temperature,
+            data.humidity
+        );
+    }
+
+
+    /*
+     * STEP 3:
+     * Determine whether the control input is valid.
+     */
+    const bool controlInputValid =
+        data.environmentalSensorValid &&
+        !isnan(airVPD);
+
+
+    /*
+     * STEP 4:
+     * Evaluate the selected VPD profile and automatically
+     * update the humidifier relay.
+     */
+    const ControlState controlState =
+        updateVPDControl(
+            airVPD,
+            controlInputValid
+        );
+
+
+    /*
+     * STEP 5:
+     * Print the complete system state.
+     */
+    printSystemStatus(
+        data,
+        airVPD,
+        controlState
+    );
 }
