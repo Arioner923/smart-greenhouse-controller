@@ -168,3 +168,29 @@ constexpr ControlMode DEFAULT_CONTROL_MODE =
  */
 
 constexpr unsigned long SENSOR_READ_INTERVAL_MS = 2000;
+
+/*
+ * Wi-Fi provisioning configuration.
+ *
+ * These are NOT the user's home Wi-Fi credentials.
+ * They define only the temporary setup access point.
+ */
+constexpr char WIFI_SETUP_AP_NAME[] =
+    "SmartGreenhouse-Setup";
+
+constexpr char WIFI_SETUP_AP_PASSWORD[] =
+    "Greenhouse123";
+
+/*
+ * Maximum time that the configuration portal
+ * remains active before returning control
+ * to the main firmware.
+ */
+constexpr unsigned long WIFI_CONFIG_PORTAL_TIMEOUT_SECONDS =
+    300UL;
+
+/*
+ * Maximum time used for connection attempts.
+ */
+constexpr unsigned long WIFI_CONNECT_TIMEOUT_SECONDS =
+    20UL;

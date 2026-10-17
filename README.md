@@ -228,6 +228,11 @@ are stored in the `validation` documentation.
 - [x] MANUAL operating mode validated
 - [x] Safe operating-mode transitions validated
 - [x] Manual control safety overrides validated
+- [x] Wi-Fi provisioning implemented
+- [x] Captive portal validated
+- [x] Wi-Fi credentials persistence validated
+- [x] Automatic Wi-Fi reconnection validated
+- [x] Network failure recovery validated
 - [ ] Local web dashboard implemented
 - [ ] Web-based control validated
 

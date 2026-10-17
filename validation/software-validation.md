@@ -655,3 +655,108 @@ The firmware successfully validated:
 Serial Monitor screenshot:
 
     auto-manual-modes-pass.png
+
+---
+
+# SW-07 - Wi-Fi Provisioning
+
+## Objective
+
+Verify that the Smart Greenhouse Controller can be connected to a local
+Wi-Fi network without storing the user's Wi-Fi credentials in the firmware.
+
+The system must support:
+
+- Initial Wi-Fi provisioning through a captive portal
+- Persistent Wi-Fi credentials
+- Automatic reconnection after restart
+- Recovery when the configured Wi-Fi network is temporarily unavailable
+- Offline operation when Wi-Fi is unavailable
+
+## Test Results
+
+### Initial Provisioning
+
+With no usable Wi-Fi connection available, the controller created the
+temporary configuration access point:
+
+    SmartGreenhouse-Setup
+
+The configuration portal was available at:
+
+    192.168.4.1
+
+The user successfully selected the local Wi-Fi network and entered its
+credentials through the captive portal.
+
+Result:
+
+    Wi-Fi connection: PASS
+    Wi-Fi Status    : CONNECTED
+
+### Saved Credentials
+
+After restarting the ESP8266, the controller automatically connected to
+the previously configured Wi-Fi network without requiring the user to
+enter the credentials again.
+
+Result:
+
+    Connecting to SAVED AP
+    AutoConnect: SUCCESS
+    Wi-Fi Status: CONNECTED
+
+### Temporary Network Failure
+
+The configured router was temporarily disabled.
+
+After restarting, the controller attempted to connect to the saved network.
+
+The connection failed because the router was unavailable, but the saved
+credentials were preserved.
+
+The controller then started the fallback configuration access point:
+
+    SmartGreenhouse-Setup
+
+This confirmed that the device remained recoverable without firmware
+modification.
+
+### Network Recovery
+
+The router was restored without entering new Wi-Fi credentials.
+
+After restarting the ESP8266, the controller successfully connected using
+the previously saved credentials.
+
+Result:
+
+    Connecting to SAVED AP
+    AutoConnect: SUCCESS
+    Wi-Fi Status: CONNECTED
+
+## Result
+
+The Wi-Fi provisioning implementation operated correctly.
+
+The firmware successfully validated:
+
+- Captive portal provisioning
+- User Wi-Fi configuration without source-code credentials
+- Persistent Wi-Fi credentials
+- Automatic reconnection after restart
+- Preservation of credentials during temporary network failure
+- Configuration portal fallback
+- Successful reconnection after network restoration
+
+## Status
+
+- [x] PASS
+- [ ] FAIL
+
+## Evidence
+
+Serial Monitor evidence:
+
+    wifi-provisioning-pass.png
+
