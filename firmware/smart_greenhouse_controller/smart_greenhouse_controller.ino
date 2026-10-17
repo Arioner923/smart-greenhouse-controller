@@ -8,6 +8,7 @@
 #include "vpd.h"
 #include "control.h"
 #include "wifi_provisioning.h"
+#include "web_server.h"
 
 
 /*
@@ -275,6 +276,14 @@ void setup()
         Serial.println("OFFLINE / SETUP MODE");
     }
 
+    /*
+    * Initialize the local monitoring dashboard.
+    *
+    * If Wi-Fi is unavailable, the server will
+    * start automatically when Wi-Fi reconnects.
+    */
+    initializeWebServer();
+
 
     Serial.println();
 
@@ -322,6 +331,11 @@ void loop()
      * This is non-blocking.
      */
     processWiFiProvisioning();
+
+    /*
+    * Keep the local dashboard responsive.
+    */
+    processWebServer();
 
 
     const unsigned long currentTime =
@@ -392,7 +406,16 @@ void loop()
             data.humidity,
             controlInputValid
         );
-
+        
+    /*
+    * Publish the latest control-cycle snapshot
+    * to the local web dashboard.
+    */
+    updateWebServerData(
+        data,
+        airVPD,
+        controlState
+    );
 
     /*
      * STEP 5

@@ -235,7 +235,11 @@ are stored in the `validation` documentation.
 - [x] Network failure recovery validated
 - [x] Offline greenhouse operation validated
 - [x] Runtime Wi-Fi reconnection validated
-- [ ] Local web dashboard implemented
+- [x] Local web dashboard implemented
+- [x] Live sensor data display validated
+- [x] Automatic dashboard refresh validated
+- [x] Controller status display validated
+- [x] Network status display validated
 - [ ] Web-based control validated
 
 ### Hardware Validation
