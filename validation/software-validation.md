@@ -102,3 +102,61 @@ expected.
 Serial Monitor screenshot:
 
     sensor-module-integration-pass.png
+
+---
+
+# SW-02 - VPD Module Integration
+
+## Objective
+
+Verify that the modular VPD calculation implementation operates correctly
+using live environmental measurements from the sensor module.
+
+## Modules Under Test
+
+- `config.h`
+- `types.h`
+- `sensors.h`
+- `sensors.cpp`
+- `vpd.h`
+- `vpd.cpp`
+- `smart_greenhouse_controller.ino`
+
+## Test Procedure
+
+1. Initialize the BME280 through the sensor module.
+2. Read live air temperature and relative humidity.
+3. Pass the measured values to the VPD calculation module.
+4. Calculate Air VPD.
+5. Display the result through the Serial Monitor.
+6. Verify that the calculated value is physically consistent with the
+   measured temperature and humidity.
+
+## Observed Result
+
+    Sensor initialization : PASS
+    Temperature           : 24.83 °C
+    Humidity              : 58.92 %
+    Pressure              : 1009.96 hPa
+    Soil RAW              : 739
+    Soil Moist.           : 2.0 %
+    Air VPD               : 1.29 kPa
+
+## Result
+
+The VPD module successfully received live environmental measurements from
+the sensor module and calculated a valid Air Vapor Pressure Deficit.
+
+The observed Air VPD value of 1.29 kPa is consistent with the measured
+temperature and relative humidity.
+
+## Status
+
+- [x] PASS
+- [ ] FAIL
+
+## Evidence
+
+Serial Monitor screenshot:
+
+    vpd-module-integration-pass.png    

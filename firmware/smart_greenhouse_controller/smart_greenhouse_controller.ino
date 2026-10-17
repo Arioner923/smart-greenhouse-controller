@@ -3,6 +3,7 @@
 #include "config.h"
 #include "types.h"
 #include "sensors.h"
+#include "vpd.h"
 
 
 void setup()
@@ -14,7 +15,7 @@ void setup()
     Serial.println();
     Serial.println("================================");
     Serial.println(" Smart Greenhouse Controller");
-    Serial.println(" Sensor Module Test");
+    Serial.println(" VPD Module Integration Test");
     Serial.println("================================");
 
     if (!initializeSensors())
@@ -36,6 +37,16 @@ void setup()
 void loop()
 {
     SensorData data = readSensors();
+
+    float airVPD = NAN;
+
+    if (data.environmentalSensorValid)
+    {
+        airVPD = calculateAirVPD(
+            data.temperature,
+            data.humidity
+        );
+    }
 
     Serial.println("--------------------------------");
 
@@ -64,6 +75,16 @@ void loop()
     Serial.print("Soil Moist. : ");
     Serial.print(data.soilPercent, 1);
     Serial.println(" %");
+
+    if (!isnan(airVPD)){
+        Serial.print("Air VPD      : ");
+        Serial.print(airVPD, 2);
+        Serial.println(" kPa");
+    }
+    else
+    {
+        Serial.println("Air VPD      : INVALID");
+    }
 
     delay(SENSOR_READ_INTERVAL_MS);
 }

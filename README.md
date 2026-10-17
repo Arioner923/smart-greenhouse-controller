@@ -217,8 +217,8 @@ are stored in the `validation` documentation.
 - [x] System configuration implemented
 - [x] Sensor module implemented
 - [x] Sensor module integration validated
-- [ ] VPD calculation module implemented
-- [ ] VPD module integration validated
+- [x] VPD calculation module implemented
+- [x] VPD module integration validated
 - [ ] Control module implemented
 - [ ] Automatic VPD control validated
 
@@ -258,8 +258,6 @@ Completed:
 
 Current next steps:
 
-- Implement the VPD calculation module
-- Validate VPD integration with live sensor data
 - Implement the control module
 - Add growth-stage profile selection
 - Implement automatic humidifier control
