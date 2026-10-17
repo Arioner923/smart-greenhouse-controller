@@ -219,7 +219,7 @@ are stored in the `validation` documentation.
 - [x] Sensor module integration validated
 - [x] VPD calculation module implemented
 - [x] VPD module integration validated
-- [ ] Control module implemented
+- [x] Control module implemented
 - [ ] Automatic VPD control validated
 
 ### Hardware Validation

@@ -72,3 +72,20 @@ enum class VPDStatus
     InRange,
     High
 };
+
+/*
+ * Current output state of the VPD control system.
+ *
+ * controlValid:
+ *     Indicates whether automatic control is allowed to operate.
+ *
+ * humidifierOn:
+ *     Current commanded state of the humidifier relay.
+ */
+struct ControlState
+{
+    VPDStatus vpdStatus;
+
+    bool humidifierOn;
+    bool controlValid;
+};

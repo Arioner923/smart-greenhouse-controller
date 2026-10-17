@@ -159,4 +159,91 @@ temperature and relative humidity.
 
 Serial Monitor screenshot:
 
-    vpd-module-integration-pass.png    
+    vpd-module-integration-pass.png
+
+---
+
+# SW-03 - Control Module Integration
+
+## Objective
+
+Verify that the VPD control module correctly evaluates VPD conditions,
+applies hysteresis and controls the humidifier relay safely.
+
+## Modules Under Test
+
+- `config.h`
+- `types.h`
+- `control.h`
+- `control.cpp`
+- `smart_greenhouse_controller.ino`
+
+## Selected Profile
+
+    Mid / Late Flower
+
+Configured values:
+
+    Minimum VPD : 1.20 kPa
+    Target VPD  : 1.40 kPa
+    Maximum VPD : 1.60 kPa
+
+## Test Cases
+
+### High VPD
+
+    Input VPD  : 1.70 kPa
+    VPD Status : HIGH
+    Humidifier : ON
+
+### Hysteresis Hold
+
+    Input VPD  : 1.50 kPa
+    VPD Status : IN RANGE
+    Humidifier : ON
+
+The relay remained ON because VPD had not yet reached the configured target.
+
+### Target Reached
+
+    Input VPD  : 1.40 kPa
+    VPD Status : IN RANGE
+    Humidifier : OFF
+
+The relay switched OFF when the target VPD was reached.
+
+### Low VPD
+
+    Input VPD  : 1.10 kPa
+    VPD Status : LOW
+    Humidifier : OFF
+
+### Invalid Input
+
+    Input VPD  : INVALID
+    VPD Status : INVALID
+    Humidifier : OFF
+
+The fail-safe logic correctly forced the relay to the OFF state.
+
+## Result
+
+The control module correctly:
+
+- Classified VPD as LOW, IN RANGE or HIGH.
+- Activated the humidifier above the maximum VPD threshold.
+- Preserved the previous relay state inside the hysteresis region.
+- Deactivated the humidifier when the target VPD was reached.
+- Kept the humidifier OFF during LOW VPD.
+- Forced the humidifier OFF when control input was invalid.
+
+## Status
+
+- [x] PASS
+- [ ] FAIL
+
+## Evidence
+
+Serial Monitor screenshots:
+
+    control-module-integration-pass.png

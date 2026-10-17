@@ -2,8 +2,69 @@
 
 #include "config.h"
 #include "types.h"
-#include "sensors.h"
-#include "vpd.h"
+#include "control.h"
+
+
+void runControlTest(
+    const char* testName,
+    float testVPD,
+    bool inputValid
+)
+{
+    const VPDProfile& profile =
+        getActiveVPDProfile();
+
+    ControlState state =
+        updateVPDControl(testVPD, inputValid);
+
+    Serial.println("--------------------------------");
+
+    Serial.print("Test          : ");
+    Serial.println(testName);
+
+    if (inputValid)
+    {
+        Serial.print("Input VPD     : ");
+        Serial.print(testVPD, 2);
+        Serial.println(" kPa");
+    }
+    else
+    {
+        Serial.println("Input VPD     : INVALID");
+    }
+
+    Serial.print("Profile       : ");
+    Serial.println(profile.name);
+
+    Serial.print("Target        : ");
+    Serial.print(profile.targetVPD, 2);
+    Serial.println(" kPa");
+
+    Serial.print("Range         : ");
+    Serial.print(profile.minVPD, 2);
+    Serial.print(" - ");
+    Serial.print(profile.maxVPD, 2);
+    Serial.println(" kPa");
+
+    if (state.controlValid)
+    {
+        Serial.print("VPD Status    : ");
+        Serial.println(
+            vpdStatusToString(state.vpdStatus)
+        );
+    }
+    else
+    {
+        Serial.println("VPD Status    : INVALID");
+    }
+
+    Serial.print("Humidifier    : ");
+    Serial.println(
+        state.humidifierOn ? "ON" : "OFF"
+    );
+
+    delay(3000);
+}
 
 
 void setup()
@@ -15,76 +76,112 @@ void setup()
     Serial.println();
     Serial.println("================================");
     Serial.println(" Smart Greenhouse Controller");
-    Serial.println(" VPD Module Integration Test");
+    Serial.println(" Control Module Integration Test");
     Serial.println("================================");
-
-    if (!initializeSensors())
-    {
-        Serial.println("ERROR: Sensor initialization failed.");
-        Serial.println("Check BME280 wiring and I2C address.");
-
-        while (true)
-        {
-            delay(1000);
-        }
-    }
-
-    Serial.println("Sensor initialization: PASS");
     Serial.println();
+
+    /*
+     * IMPORTANT:
+     *
+     * Control is initialized before any automatic
+     * decisions so that the relay starts safely OFF.
+     */
+    initializeControl();
+
+    const VPDProfile& profile =
+        getActiveVPDProfile();
+
+    Serial.print("Selected Profile: ");
+    Serial.println(profile.name);
+
+    Serial.println();
+
+
+    /*
+     * Test 1:
+     *
+     * VPD above maximum.
+     *
+     * Expected:
+     * HIGH / Humidifier ON
+     */
+    runControlTest(
+        "HIGH VPD",
+        1.70f,
+        true
+    );
+
+
+    /*
+     * Test 2:
+     *
+     * VPD inside the range but still above target.
+     *
+     * The humidifier should remain ON because it was
+     * activated during Test 1.
+     *
+     * This validates hysteresis.
+     */
+    runControlTest(
+        "HYSTERESIS HOLD",
+        1.50f,
+        true
+    );
+
+
+    /*
+     * Test 3:
+     *
+     * VPD reaches target.
+     *
+     * Expected:
+     * Humidifier OFF
+     */
+    runControlTest(
+        "TARGET REACHED",
+        1.40f,
+        true
+    );
+
+
+    /*
+     * Test 4:
+     *
+     * VPD below minimum.
+     *
+     * Expected:
+     * LOW / Humidifier OFF
+     */
+    runControlTest(
+        "LOW VPD",
+        1.10f,
+        true
+    );
+
+
+    /*
+     * Test 5:
+     *
+     * Invalid environmental input.
+     *
+     * Expected:
+     * Fail-safe relay OFF
+     */
+    runControlTest(
+        "INVALID INPUT",
+        NAN,
+        false
+    );
+
+
+    Serial.println("--------------------------------");
+    Serial.println("Control test sequence complete.");
 }
 
 
 void loop()
 {
-    SensorData data = readSensors();
-
-    float airVPD = NAN;
-
-    if (data.environmentalSensorValid)
-    {
-        airVPD = calculateAirVPD(
-            data.temperature,
-            data.humidity
-        );
-    }
-
-    Serial.println("--------------------------------");
-
-    if (!data.environmentalSensorValid)
-    {
-        Serial.println("ERROR: Invalid environmental sensor data.");
-    }
-    else
-    {
-        Serial.print("Temperature : ");
-        Serial.print(data.temperature, 2);
-        Serial.println(" C");
-
-        Serial.print("Humidity    : ");
-        Serial.print(data.humidity, 2);
-        Serial.println(" %");
-
-        Serial.print("Pressure    : ");
-        Serial.print(data.pressure, 2);
-        Serial.println(" hPa");
-    }
-
-    Serial.print("Soil RAW    : ");
-    Serial.println(data.soilRaw);
-
-    Serial.print("Soil Moist. : ");
-    Serial.print(data.soilPercent, 1);
-    Serial.println(" %");
-
-    if (!isnan(airVPD)){
-        Serial.print("Air VPD      : ");
-        Serial.print(airVPD, 2);
-        Serial.println(" kPa");
-    }
-    else
-    {
-        Serial.println("Air VPD      : INVALID");
-    }
-
-    delay(SENSOR_READ_INTERVAL_MS);
+    /*
+     * No repeated test cycle is required.
+     */
 }
