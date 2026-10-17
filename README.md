@@ -114,9 +114,9 @@ temperature and calculate Leaf VPD.
 
 ---
 
-## Planned VPD Control Profiles
+## VPD Control Profiles
 
-The future controller will support selectable growth-stage profiles.
+The controller is designed to support selectable growth-stage VPD profiles.
 
 ### Propagation / Early Veg
 
@@ -181,8 +181,8 @@ Each hardware and firmware feature is:
 4. Documented
 5. Committed separately to the repository
 
-Hardware test results and selected evidence are stored in the
-`validation` documentation.
+Hardware and firmware validation results, together with selected evidence,
+are stored in the `validation` documentation.
 
 ---
 
@@ -210,22 +210,60 @@ Hardware test results and selected evidence are stored in the
 - [x] Combined hardware test
 - [x] Air VPD calculation
 
+### Firmware Development
+
+- [x] Software architecture defined
+- [x] Shared data types implemented
+- [x] System configuration implemented
+- [x] Sensor module implemented
+- [x] Sensor module integration validated
+- [ ] VPD calculation module implemented
+- [ ] VPD module integration validated
+- [ ] Control module implemented
+- [ ] Automatic VPD control validated
+
+### Hardware Validation
+
+- [x] ESP8266 boot validation
+- [x] I2C communication
+- [x] BME280 identification
+- [x] Temperature measurement
+- [x] Relative humidity measurement
+- [x] Atmospheric pressure measurement
+- [x] Soil sensor raw ADC validation
+- [x] Soil sensor calibration
+- [x] Relay ON/OFF validation
+- [x] Combined hardware test
+- [x] Air VPD calculation
+
 ### Completed Milestone
 
 Initial hardware validation completed successfully.
 
-### Next Milestone
+Git milestone tag:
 
-Design and implementation of the modular Smart Greenhouse Controller firmware.
+    v0.1-hardware-validation
 
-Planned work:
+### Current Development Stage
+
+The project is currently in the modular firmware implementation phase.
+
+Completed:
 
 - Software architecture design
-- Modular C++ structure
-- Growth-stage VPD profiles
-- Automatic humidifier control
-- Relay hysteresis
-- Safety logic
+- Shared firmware data types
+- Centralized system configuration
+- Modular sensor implementation
+- Sensor module integration test
+
+Current next steps:
+
+- Implement the VPD calculation module
+- Validate VPD integration with live sensor data
+- Implement the control module
+- Add growth-stage profile selection
+- Implement automatic humidifier control
+- Validate relay hysteresis and safety behavior
 
 ---
 
@@ -247,6 +285,7 @@ Any future 230V AC wiring must remain physically isolated from the prototype
 shield and must be installed inside a suitable insulated enclosure.
 Special care is required because the final system is intended for operation in
 an environment where water and high humidity may be present.
+---
 
 ## Copyright
 Copyright © 2026 Arioner923. All rights reserved.
