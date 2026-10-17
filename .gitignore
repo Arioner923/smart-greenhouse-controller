@@ -1,0 +1,21 @@
+# Build outputs
+build/
+*.bin
+*.elf
+*.map
+
+# PlatformIO
+.pio/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Local credentials / secrets
+secrets.h
+credentials.h
+
+# Temporary files
+*.tmp
+*.bak
+*~

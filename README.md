@@ -13,19 +13,23 @@ such as a humidifier, ventilation fan and irrigation system.
 ## Current Hardware
 
 ### Main Controller
+
 - WeMos D1 R2 V2.1.0
 - ESP8266-based development board
 
 ### Sensors
-- GY-BME/P280 environmental sensor
+
+- BME280 environmental sensor
   - Air temperature
-  - Relative humidity (if confirmed as BME280)
+  - Relative humidity
   - Atmospheric pressure
 - Capacitive soil moisture sensor
 
 ### Actuator
+
 - ACEBOTT 5V relay module
 - SONGLE SRD-05VDC-SL-C relay
+- Active-HIGH trigger verified
 
 ---
 
@@ -50,24 +54,99 @@ All low-voltage modules share a common GND.
 
 ---
 
-## Planned Measurements
+## Current Measurements
+
+The current prototype can measure and calculate:
 
 - Air temperature
 - Relative humidity
 - Atmospheric pressure
-- Soil moisture
-- Vapor Pressure Deficit (VPD)
+- Raw soil moisture ADC value
+- Estimated soil moisture percentage
+- Air Vapor Pressure Deficit (VPD)
+
+---
+
+## Soil Moisture Calibration
+
+The current capacitive soil moisture sensor was calibrated using:
+
+    Air reference   : 746
+    Water reference : 390
+
+Relative scale:
+
+    0%   = Air reference
+    100% = Water reference
+
+Real soil validation:
+
+    Dry soil                : ~744 RAW
+    Well-watered soil       : 469 - 481 RAW
+
+The calculated percentage represents a relative moisture scale and does not
+represent absolute volumetric water content.
+
+---
+
+## Current Automation Hardware
+
+The relay module has been validated successfully.
+
+Observed behavior:
+
+    LOW  -> Relay OFF
+    HIGH -> Relay ON
+
+The relay will initially be used to control a humidifier.
+
+---
+
+## VPD
+
+Air VPD is calculated using:
+
+- BME280 air temperature
+- BME280 relative humidity
+
+A future MLX90614 infrared temperature sensor may be added to measure leaf
+temperature and calculate Leaf VPD.
+
+---
+
+## Planned VPD Control Profiles
+
+The future controller will support selectable growth-stage profiles.
+
+### Propagation / Early Veg
+
+    VPD Range  : 0.4 - 0.8 kPa
+    Target VPD : 0.6 kPa
+
+### Late Veg / Early Flower
+
+    VPD Range  : 0.8 - 1.2 kPa
+    Target VPD : 1.0 kPa
+
+### Mid / Late Flower
+
+    VPD Range  : 1.2 - 1.6 kPa
+    Target VPD : 1.4 kPa
+
+Automatic humidifier control will use hysteresis to prevent rapid relay
+switching.
 
 ---
 
 ## Planned Automation
 
-The first automated function will control a humidifier using the relay.
+The first automatic control function will regulate VPD using the humidifier.
 
 Future control functions may include:
 
 - Irrigation
 - Ventilation
+- Dehumidification
 - Lighting
 - Environmental alarms
 
@@ -102,34 +181,51 @@ Each hardware and firmware feature is:
 4. Documented
 5. Committed separately to the repository
 
-Hardware test results and selected evidence will be stored in the
+Hardware test results and selected evidence are stored in the
 `validation` documentation.
 
 ---
 
-## Current Status
+## Current Project Status
 
 ### Hardware
 
 - [x] WeMos D1 R2 selected
 - [x] Prototype shield assembled
-- [x] BME280 connection prepared
-- [x] Soil moisture sensor connection prepared
-- [x] Relay connection prepared
+- [x] BME280 connected
+- [x] Soil moisture sensor connected
+- [x] Relay module connected
 
-### Validation
+### Hardware Validation
 
-- [ ] ESP8266 boot test
-- [ ] I2C scan
-- [ ] BME280/BMP280 identification
-- [ ] Temperature reading
-- [ ] Relative humidity reading
-- [ ] Pressure reading
-- [ ] Soil sensor raw ADC test
-- [ ] Soil sensor calibration
-- [ ] Relay ON/OFF test
-- [ ] Combined hardware test
-- [ ] VPD calculation
+- [x] ESP8266 boot validation
+- [x] I2C communication
+- [x] BME280 identification
+- [x] Temperature measurement
+- [x] Relative humidity measurement
+- [x] Atmospheric pressure measurement
+- [x] Soil sensor raw ADC validation
+- [x] Soil sensor calibration
+- [x] Relay ON/OFF validation
+- [x] Combined hardware test
+- [x] Air VPD calculation
+
+### Completed Milestone
+
+Initial hardware validation completed successfully.
+
+### Next Milestone
+
+Design and implementation of the modular Smart Greenhouse Controller firmware.
+
+Planned work:
+
+- Software architecture design
+- Modular C++ structure
+- Growth-stage VPD profiles
+- Automatic humidifier control
+- Relay hysteresis
+- Safety logic
 
 ---
 
@@ -144,10 +240,17 @@ smart-greenhouse-controller/
 ├── validation/
 └── assets/
 ```
-Copyright
+
+## Safety
+The prototype shield contains only low-voltage control electronics.
+Any future 230V AC wiring must remain physically isolated from the prototype
+shield and must be installed inside a suitable insulated enclosure.
+Special care is required because the final system is intended for operation in
+an environment where water and high humidity may be present.
+
+## Copyright
 Copyright © 2026 Arioner923. All rights reserved.
-This repository is publicly available for viewing and educational
-reference.
-No permission is granted to copy, redistribute, modify, publish or use
-the source code, documentation or hardware designs without explicit
-permission from the author.
+This repository is publicly available for viewing and educational reference.
+No permission is granted to copy, redistribute, modify, publish or use the
+source code, documentation or hardware designs without explicit permission
+from the author.
