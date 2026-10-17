@@ -11,37 +11,38 @@
  *
  * Responsibilities:
  *
- * - Safe relay initialization
- * - VPD status classification
- * - Growth-stage profile selection
- * - Humidifier ON/OFF control
- * - VPD hysteresis
- * - Minimum relay ON/OFF timing
- * - Maximum humidity safety cutoff
- * - Invalid-input fail-safe behavior
+ * - Automatic VPD control
+ * - Manual humidifier control
+ * - Operating mode management
+ * - Relay timing protection
+ * - Humidity safety cutoff
+ * - Invalid-input fail-safe
  */
 
 
-/*
- * Current internal relay state.
+/* =========================================================
+ * Internal Controller State
+ * =========================================================
  */
+
 static bool humidifierOn = false;
 
+static bool manualHumidifierRequest = false;
 
-/*
- * Time of the last physical relay state transition.
- *
- * millis() is used so the control system does not need
- * blocking delays during normal operation.
- */
+static ControlMode currentControlMode =
+    DEFAULT_CONTROL_MODE;
+
 static unsigned long lastRelayStateChangeTime = 0;
 
 
+/* =========================================================
+ * Internal Relay Functions
+ * =========================================================
+ */
+
+
 /*
- * Apply a new relay state.
- *
- * The transition timestamp is updated only when the
- * physical state actually changes.
+ * Apply a normal relay transition.
  */
 static void setHumidifierState(bool enabled)
 {
@@ -62,10 +63,10 @@ static void setHumidifierState(bool enabled)
 
 
 /*
- * Force the relay OFF immediately.
+ * Immediately force the humidifier OFF.
  *
- * Safety conditions are allowed to bypass the normal
- * minimum ON-time restriction.
+ * Safety conditions and an explicit Manual OFF
+ * command are allowed to bypass the minimum ON time.
  */
 static void forceHumidifierOff()
 {
@@ -82,10 +83,6 @@ static void forceHumidifierOff()
     }
     else
     {
-        /*
-         * Ensure the physical output is definitely OFF
-         * even when the internal state is already false.
-         */
         digitalWrite(
             RELAY_PIN,
             RELAY_OFF_LEVEL
@@ -94,9 +91,6 @@ static void forceHumidifierOff()
 }
 
 
-/*
- * Check whether the configured minimum OFF time has elapsed.
- */
 static bool canTurnHumidifierOn()
 {
     return
@@ -105,9 +99,6 @@ static bool canTurnHumidifierOn()
 }
 
 
-/*
- * Check whether the configured minimum ON time has elapsed.
- */
 static bool canTurnHumidifierOff()
 {
     return
@@ -116,10 +107,11 @@ static bool canTurnHumidifierOff()
 }
 
 
-/*
- * Return the VPD profile associated with the selected
- * growth stage.
+/* =========================================================
+ * VPD Profile
+ * =========================================================
  */
+
 const VPDProfile& getActiveVPDProfile()
 {
     switch (SELECTED_GROWTH_STAGE)
@@ -134,42 +126,92 @@ const VPDProfile& getActiveVPDProfile()
             return VPD_PROFILES[2];
     }
 
-    /*
-     * Defensive fallback.
-     */
     return VPD_PROFILES[0];
 }
 
 
-/*
- * Initialize control hardware.
+/* =========================================================
+ * Initialization
+ * =========================================================
  */
+
 void initializeControl()
 {
     pinMode(RELAY_PIN, OUTPUT);
 
-    /*
-     * Safe startup state.
-     */
     digitalWrite(
         RELAY_PIN,
         RELAY_OFF_LEVEL
     );
 
     humidifierOn = false;
+    manualHumidifierRequest = false;
+
+    currentControlMode =
+        DEFAULT_CONTROL_MODE;
+
+    lastRelayStateChangeTime = millis();
+}
+
+
+/* =========================================================
+ * Operating Mode
+ * =========================================================
+ */
+
+void setControlMode(ControlMode mode)
+{
+    if (currentControlMode == mode)
+    {
+        return;
+    }
 
     /*
-     * Starting this timer here also provides a short
-     * startup OFF period before automatic activation.
+     * Safe transition between operating modes.
+     */
+    forceHumidifierOff();
+
+    manualHumidifierRequest = false;
+
+    currentControlMode = mode;
+
+    /*
+     * Restart the minimum OFF timer before the
+     * new mode is allowed to activate the relay.
      */
     lastRelayStateChangeTime = millis();
 }
 
 
-/*
- * Update automatic VPD control and apply safety rules.
+ControlMode getControlMode()
+{
+    return currentControlMode;
+}
+
+
+/* =========================================================
+ * Manual Control
+ * =========================================================
  */
-ControlState updateVPDControl(
+
+void setManualHumidifierRequest(bool enabled)
+{
+    manualHumidifierRequest = enabled;
+}
+
+
+bool getManualHumidifierRequest()
+{
+    return manualHumidifierRequest;
+}
+
+
+/* =========================================================
+ * Main Control Logic
+ * =========================================================
+ */
+
+ControlState updateControl(
     float currentVPD,
     float currentHumidityPercent,
     bool inputValid
@@ -177,12 +219,18 @@ ControlState updateVPDControl(
 {
     ControlState state{};
 
+    state.controlMode =
+        currentControlMode;
+
+    state.manualRequestOn =
+        manualHumidifierRequest;
+
     state.humiditySafetyActive = false;
     state.relayTimingLockout = false;
 
 
     /*
-     * Validate control inputs.
+     * Validate environmental inputs.
      */
     state.controlValid =
         inputValid &&
@@ -194,9 +242,7 @@ ControlState updateVPDControl(
 
     /*
      * FAIL-SAFE PRIORITY 1:
-     *
-     * Invalid environmental data immediately disables
-     * the humidifier.
+     * Invalid environmental data.
      */
     if (!state.controlValid)
     {
@@ -214,7 +260,8 @@ ControlState updateVPDControl(
 
 
     /*
-     * Classify VPD condition.
+     * VPD classification remains available in
+     * both AUTO and MANUAL modes for diagnostics.
      */
     if (currentVPD < profile.minVPD)
     {
@@ -232,11 +279,7 @@ ControlState updateVPDControl(
 
     /*
      * FAIL-SAFE PRIORITY 2:
-     *
-     * Excessive humidity immediately disables the humidifier.
-     *
-     * This safety action intentionally bypasses the minimum
-     * relay ON-time restriction.
+     * Maximum humidity protection.
      */
     if (currentHumidityPercent >=
         MAX_SAFE_HUMIDITY_PERCENT)
@@ -251,9 +294,54 @@ ControlState updateVPDControl(
     }
 
 
+    /* =====================================================
+     * MANUAL MODE
+     * =====================================================
+     */
+
+    if (currentControlMode ==
+        ControlMode::Manual)
+    {
+        /*
+         * Manual OFF is immediate.
+         *
+         * An explicit user OFF command must always
+         * be able to stop the humidifier.
+         */
+        if (!manualHumidifierRequest)
+        {
+            forceHumidifierOff();
+        }
+
+        /*
+         * Manual ON still respects the minimum
+         * relay OFF time.
+         */
+        else if (!humidifierOn)
+        {
+            if (canTurnHumidifierOn())
+            {
+                setHumidifierState(true);
+            }
+            else
+            {
+                state.relayTimingLockout = true;
+            }
+        }
+
+        state.humidifierOn =
+            humidifierOn;
+
+        return state;
+    }
+
+
+    /* =====================================================
+     * AUTOMATIC MODE
+     * =====================================================
+     */
+
     /*
-     * NORMAL VPD CONTROL
-     *
      * HIGH VPD:
      * Request humidifier ON.
      */
@@ -276,7 +364,8 @@ ControlState updateVPDControl(
      * Target reached:
      * Request humidifier OFF.
      */
-    else if (currentVPD <= profile.targetVPD)
+    else if (currentVPD <=
+             profile.targetVPD)
     {
         if (humidifierOn)
         {
@@ -292,15 +381,18 @@ ControlState updateVPDControl(
     }
 
 
-    state.humidifierOn = humidifierOn;
+    state.humidifierOn =
+        humidifierOn;
 
     return state;
 }
 
 
-/*
- * Convert VPD status to readable text.
+/* =========================================================
+ * Diagnostic Text
+ * =========================================================
  */
+
 const char* vpdStatusToString(VPDStatus status)
 {
     switch (status)
@@ -313,6 +405,21 @@ const char* vpdStatusToString(VPDStatus status)
 
         case VPDStatus::High:
             return "HIGH";
+    }
+
+    return "UNKNOWN";
+}
+
+
+const char* controlModeToString(ControlMode mode)
+{
+    switch (mode)
+    {
+        case ControlMode::Automatic:
+            return "AUTO";
+
+        case ControlMode::Manual:
+            return "MANUAL";
     }
 
     return "UNKNOWN";

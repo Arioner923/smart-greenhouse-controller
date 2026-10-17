@@ -507,3 +507,151 @@ The firmware successfully validated:
 Serial Monitor screenshot:
 
     relay-control-safety-pass.png
+
+---
+
+# SW-06 - AUTO / MANUAL Operating Modes
+
+## Objective
+
+Verify that the greenhouse controller can safely switch between Automatic
+and Manual operating modes while preserving all control safety protections.
+
+## Operating Modes
+
+### Automatic Mode
+
+The humidifier is controlled automatically using:
+
+    Sensor Data
+        ↓
+    Air VPD
+        ↓
+    Growth-Stage Profile
+        ↓
+    Control Logic
+        ↓
+    Relay
+
+### Manual Mode
+
+The humidifier state is requested by the user.
+
+Manual control does not bypass:
+
+- Invalid-input fail-safe
+- Maximum humidity safety cutoff
+- Minimum relay OFF time
+
+An explicit Manual OFF command is allowed to stop the humidifier immediately.
+
+## Test Results
+
+### Automatic HIGH VPD
+
+    Mode           : AUTO
+    Input VPD      : 1.70 kPa
+    Humidity       : 50.0 %
+    VPD Status     : HIGH
+    Humidifier     : ON
+
+Automatic VPD control activated the relay correctly.
+
+### Switch to Manual Mode
+
+    Mode           : MANUAL
+    Manual Request : OFF
+    Humidifier     : OFF
+
+Changing operating mode safely forced the relay OFF.
+
+### Manual ON Lockout
+
+    Mode           : MANUAL
+    Manual Request : ON
+    Humidifier     : OFF
+    Timing Lock    : ACTIVE
+
+The manual ON request was temporarily blocked because the minimum relay OFF
+time had not yet elapsed.
+
+### Manual ON
+
+    Mode           : MANUAL
+    Manual Request : ON
+    Humidifier     : ON
+    Timing Lock    : OFF
+
+The relay activated correctly after the minimum OFF time elapsed.
+
+### Manual OFF
+
+    Mode           : MANUAL
+    Manual Request : OFF
+    Humidifier     : OFF
+
+The explicit Manual OFF request stopped the relay immediately.
+
+### Manual High-Humidity Safety
+
+    Mode           : MANUAL
+    Humidity       : 90.0 %
+    Manual Request : ON
+    Humidifier     : OFF
+    RH Safety      : ACTIVE
+
+The humidity safety system correctly overrode the Manual ON request.
+
+### Manual Invalid Input
+
+    Mode           : MANUAL
+    Input VPD      : INVALID
+    Humidity       : INVALID
+    Humidifier     : OFF
+
+The controller correctly entered fail-safe behavior.
+
+### Return to Automatic Mode
+
+    Mode           : AUTO
+    Humidifier     : OFF
+    Timing Lock    : ACTIVE
+
+The transition back to Automatic mode safely forced the relay OFF and restarted
+the minimum OFF timer.
+
+### Automatic Control Restored
+
+    Mode           : AUTO
+    Input VPD      : 1.70 kPa
+    VPD Status     : HIGH
+    Humidifier     : ON
+
+Automatic VPD control resumed correctly after the mode transition.
+
+## Result
+
+The AUTO / MANUAL operating-mode implementation operated correctly.
+
+The firmware successfully validated:
+
+- Automatic VPD operation
+- Safe transition from AUTO to MANUAL
+- Manual ON control
+- Manual OFF control
+- Manual relay timing protection
+- Manual humidity safety override
+- Manual invalid-input fail-safe
+- Safe transition from MANUAL back to AUTO
+- Restoration of automatic control
+
+## Status
+
+- [x] PASS
+- [ ] FAIL
+
+## Evidence
+
+Serial Monitor screenshot:
+
+    auto-manual-modes-pass.png

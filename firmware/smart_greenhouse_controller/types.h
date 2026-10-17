@@ -73,6 +73,23 @@ enum class VPDStatus
     High
 };
 
+
+/*
+ * Operating mode of the greenhouse controller.
+ *
+ * Automatic:
+ *     Humidifier state is controlled from VPD.
+ *
+ * Manual:
+ *     Humidifier state is requested by the user.
+ *     Safety protections remain active.
+ */
+enum class ControlMode
+{
+    Automatic,
+    Manual
+};
+
 /*
  * Current output state of the VPD control system.
  *
@@ -85,19 +102,17 @@ enum class VPDStatus
 struct ControlState
 {
     VPDStatus vpdStatus;
+    ControlMode controlMode;
 
     bool humidifierOn;
     bool controlValid;
 
-    /*
-     * True when the humidifier has been disabled because
-     * humidity exceeded the configured safety limit.
-     */
     bool humiditySafetyActive;
+    bool relayTimingLockout;
 
     /*
-     * True when a requested relay transition was temporarily
-     * blocked by the minimum ON/OFF timing protection.
+     * Requested humidifier state while operating
+     * in Manual mode.
      */
-    bool relayTimingLockout;
+    bool manualRequestOn;
 };

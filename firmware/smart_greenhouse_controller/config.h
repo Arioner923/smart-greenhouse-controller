@@ -115,9 +115,7 @@ constexpr float MAX_SAFE_HUMIDITY_PERCENT = 85.0f;
  */
 
 constexpr GrowthStage SELECTED_GROWTH_STAGE =
-    // GrowthStage::PropagationEarlyVeg;
     GrowthStage::MidLateFlower;
-    // GrowthStage::LateVegEarlyFlower;
 
 
 /* =========================================================
@@ -148,6 +146,18 @@ constexpr VPDProfile VPD_PROFILES[] =
         1.6f
     }
 };
+
+/* =========================================================
+ * Operating Mode Configuration
+ * =========================================================
+ *
+ * Default mode after ESP8266 startup.
+ *
+ * The mode will later be selectable from the web dashboard.
+ */
+
+constexpr ControlMode DEFAULT_CONTROL_MODE =
+    ControlMode::Automatic;
 
 
 /* =========================================================

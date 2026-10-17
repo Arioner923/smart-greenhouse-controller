@@ -224,6 +224,12 @@ are stored in the `validation` documentation.
 - [x] Relay timing protection validated
 - [x] Humidity safety cutoff validated
 - [x] Invalid-input fail-safe validated
+- [x] AUTO operating mode validated
+- [x] MANUAL operating mode validated
+- [x] Safe operating-mode transitions validated
+- [x] Manual control safety overrides validated
+- [ ] Local web dashboard implemented
+- [ ] Web-based control validated
 
 ### Hardware Validation
 

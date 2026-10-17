@@ -5,32 +5,60 @@
 /*
  * Smart Greenhouse Controller
  * Control Module Interface
- *
- * This module evaluates the current VPD and controls
- * the humidifier relay using the selected growth-stage profile.
  */
 
 
 /*
- * Initializes the control hardware.
+ * Initialize the control system.
  *
- * The relay is immediately placed in the safe OFF state.
+ * The relay always starts in the safe OFF state.
  */
 void initializeControl();
 
 
 /*
- * Updates the VPD control system.
+ * Change controller operating mode.
  *
- * Parameters:
- *   currentVPD -> calculated Air VPD in kPa
- *   inputValid -> true only when the environmental measurements
- *                 and calculated VPD are valid
- *
- * Returns:
- *   Current ControlState.
+ * Changing mode forces the humidifier OFF first
+ * to avoid carrying an old relay state into the
+ * new operating mode.
  */
-ControlState updateVPDControl(
+void setControlMode(ControlMode mode);
+
+
+/*
+ * Return the currently selected operating mode.
+ */
+ControlMode getControlMode();
+
+
+/*
+ * Set the requested humidifier state while
+ * operating in Manual mode.
+ *
+ * Safety rules still have priority.
+ */
+void setManualHumidifierRequest(bool enabled);
+
+
+/*
+ * Return the current Manual-mode request.
+ */
+bool getManualHumidifierRequest();
+
+
+/*
+ * Evaluate the controller and update the relay.
+ *
+ * In Automatic mode:
+ *     VPD determines the requested relay state.
+ *
+ * In Manual mode:
+ *     The user request determines the requested relay state.
+ *
+ * Safety protections remain active in both modes.
+ */
+ControlState updateControl(
     float currentVPD,
     float currentHumidityPercent,
     bool inputValid
@@ -38,13 +66,14 @@ ControlState updateVPDControl(
 
 
 /*
- * Returns the currently selected VPD profile.
+ * Return the currently selected VPD profile.
  */
 const VPDProfile& getActiveVPDProfile();
 
 
 /*
- * Converts a VPDStatus value into readable text
- * for Serial Monitor diagnostics.
+ * Convert diagnostic states to readable text.
  */
 const char* vpdStatusToString(VPDStatus status);
+
+const char* controlModeToString(ControlMode mode);
