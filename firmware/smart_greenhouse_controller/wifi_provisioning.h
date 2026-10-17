@@ -43,3 +43,10 @@ void printWiFiStatus();
  * Intended only for maintenance/testing.
  */
 void clearWiFiCredentials();
+
+/*
+ * Processes the non-blocking Wi-Fi configuration portal.
+ *
+ * Must be called repeatedly from loop().
+ */
+void processWiFiProvisioning();

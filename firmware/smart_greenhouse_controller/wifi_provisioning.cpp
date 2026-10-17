@@ -61,7 +61,17 @@ bool initializeWiFiProvisioning()
 
 
     /*
-     * Prevent indefinite blocking.
+     * Keep the configuration portal non-blocking.
+     *
+     * This allows the greenhouse controller to
+     * continue monitoring sensors and controlling
+     * the relay even when Wi-Fi is unavailable.
+     */
+    wifiManager.setConfigPortalBlocking(false);
+
+
+    /*
+     * Prevent long connection attempts.
      */
     wifiManager.setConnectTimeout(
         WIFI_CONNECT_TIMEOUT_SECONDS
@@ -84,11 +94,8 @@ bool initializeWiFiProvisioning()
     /*
      * Attempt connection using saved credentials.
      *
-     * If connection fails, WiFiManager creates:
-     *
-     * SmartGreenhouse-Setup
-     *
-     * and starts the captive portal.
+     * If connection fails, WiFiManager creates
+     * the SmartGreenhouse-Setup access point.
      */
     const bool connected =
         wifiManager.autoConnect(
@@ -101,11 +108,15 @@ bool initializeWiFiProvisioning()
     {
         Serial.println();
         Serial.println(
-            "Wi-Fi connection failed or portal timed out."
+            "Wi-Fi not connected."
         );
 
         Serial.println(
-            "Controller will continue offline."
+            "Configuration portal is running."
+        );
+
+        Serial.println(
+            "Controller continues offline."
         );
 
         return false;
@@ -166,4 +177,13 @@ void clearWiFiCredentials()
     Serial.println(
         "Saved Wi-Fi credentials cleared."
     );
+}
+
+void processWiFiProvisioning()
+{
+    /*
+     * Required when WiFiManager operates
+     * in non-blocking mode.
+     */
+    wifiManager.process();
 }

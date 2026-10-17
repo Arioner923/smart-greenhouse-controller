@@ -233,6 +233,8 @@ are stored in the `validation` documentation.
 - [x] Wi-Fi credentials persistence validated
 - [x] Automatic Wi-Fi reconnection validated
 - [x] Network failure recovery validated
+- [x] Offline greenhouse operation validated
+- [x] Runtime Wi-Fi reconnection validated
 - [ ] Local web dashboard implemented
 - [ ] Web-based control validated
 

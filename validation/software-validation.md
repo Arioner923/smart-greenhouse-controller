@@ -671,7 +671,8 @@ The system must support:
 - Persistent Wi-Fi credentials
 - Automatic reconnection after restart
 - Recovery when the configured Wi-Fi network is temporarily unavailable
-- Offline operation when Wi-Fi is unavailable
+- Offline greenhouse operation when Wi-Fi is unavailable
+- Automatic runtime reconnection after network restoration
 
 ## Test Results
 
@@ -722,7 +723,7 @@ The controller then started the fallback configuration access point:
 This confirmed that the device remained recoverable without firmware
 modification.
 
-### Network Recovery
+### Network Recovery After Restart
 
 The router was restored without entering new Wi-Fi credentials.
 
@@ -735,9 +736,56 @@ Result:
     AutoConnect: SUCCESS
     Wi-Fi Status: CONNECTED
 
+### Offline Greenhouse Operation
+
+During normal integrated firmware operation, the router was switched off
+while the controller remained powered.
+
+The Wi-Fi connection changed to:
+
+    Wi-Fi: OFFLINE
+
+The greenhouse control system continued operating normally.
+
+The following functions remained active:
+
+- Environmental sensor acquisition
+- Soil moisture measurement
+- Air VPD calculation
+- Automatic control
+- Relay control logic
+- Relay timing protection
+- Humidity safety protection
+
+Result:
+
+    Control: ACTIVE
+    Wi-Fi  : OFFLINE
+
+This confirmed that greenhouse control does not depend on network
+availability.
+
+### Runtime Wi-Fi Reconnection
+
+The router was restored while the ESP8266 remained powered.
+
+No reset, firmware upload, or new Wi-Fi configuration was performed.
+
+The controller automatically reconnected to the previously configured
+network.
+
+Result:
+
+    Wi-Fi      : CONNECTED
+    IP Address : assigned by router
+
+Greenhouse monitoring and control continued operating throughout the
+network interruption and reconnection.
+
 ## Result
 
-The Wi-Fi provisioning implementation operated correctly.
+The Wi-Fi provisioning and network recovery implementation operated
+correctly.
 
 The firmware successfully validated:
 
@@ -748,6 +796,9 @@ The firmware successfully validated:
 - Preservation of credentials during temporary network failure
 - Configuration portal fallback
 - Successful reconnection after network restoration
+- Offline greenhouse operation
+- Independence of greenhouse control from Wi-Fi availability
+- Automatic runtime Wi-Fi reconnection
 
 ## Status
 
@@ -759,4 +810,5 @@ The firmware successfully validated:
 Serial Monitor evidence:
 
     wifi-provisioning-pass.png
+    wifi-offline-reconnect-pass.png
 
