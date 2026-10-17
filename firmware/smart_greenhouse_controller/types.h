@@ -88,4 +88,16 @@ struct ControlState
 
     bool humidifierOn;
     bool controlValid;
+
+    /*
+     * True when the humidifier has been disabled because
+     * humidity exceeded the configured safety limit.
+     */
+    bool humiditySafetyActive;
+
+    /*
+     * True when a requested relay transition was temporarily
+     * blocked by the minimum ON/OFF timing protection.
+     */
+    bool relayTimingLockout;
 };

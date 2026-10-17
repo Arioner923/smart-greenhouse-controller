@@ -63,6 +63,39 @@ constexpr uint8_t RELAY_PIN = D5;
 constexpr uint8_t RELAY_ON_LEVEL = HIGH;
 constexpr uint8_t RELAY_OFF_LEVEL = LOW;
 
+/* =========================================================
+ * Control Safety Configuration
+ * =========================================================
+ *
+ * The timing values below are intentionally short during
+ * firmware validation so the safety behavior can be tested
+ * without long waiting periods.
+ *
+ * They may be adjusted later when the real humidifier and
+ * greenhouse operating conditions are known.
+ */
+
+
+/*
+ * Minimum time that the relay must remain ON after activation.
+ */
+constexpr unsigned long MIN_RELAY_ON_TIME_MS = 5000UL;
+
+
+/*
+ * Minimum time that the relay must remain OFF after deactivation.
+ */
+constexpr unsigned long MIN_RELAY_OFF_TIME_MS = 5000UL;
+
+
+/*
+ * Initial configurable humidity safety ceiling.
+ *
+ * This is a controller safety parameter, not a universal
+ * recommended humidity value for every crop.
+ */
+constexpr float MAX_SAFE_HUMIDITY_PERCENT = 85.0f;
+
 
 /* =========================================================
  * Growth Stage Selection

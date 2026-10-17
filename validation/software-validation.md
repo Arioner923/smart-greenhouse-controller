@@ -365,4 +365,145 @@ The firmware successfully:
 Serial Monitor screenshots:
 
     automatic-vpd-control-in-range-pass.png
-    automatic-vpd-control-high-pass.png
+
+---
+
+# SW-05 - Relay and Control Safety
+
+## Objective
+
+Verify the relay timing protections and control safety mechanisms before
+connecting a real humidifier.
+
+## Safety Features Under Test
+
+- Safe relay startup
+- Minimum relay OFF time
+- Minimum relay ON time
+- Humidity safety cutoff
+- Invalid-input fail-safe
+
+## Configuration
+
+Validation timing values:
+
+    Minimum ON time  : 5000 ms
+    Minimum OFF time : 5000 ms
+
+Humidity safety limit:
+
+    Maximum RH : 85.0 %
+
+The relay timing values are intentionally short for firmware validation and
+may be adjusted later when the real humidifier is available.
+
+## Test Results
+
+### Startup OFF Lockout
+
+    Input VPD     : 1.70 kPa
+    Humidity      : 50.0 %
+    VPD Status    : HIGH
+    Humidifier    : OFF
+    Timing Lock   : ACTIVE
+    RH Safety     : OFF
+
+The relay remained OFF immediately after startup because the minimum OFF time
+had not yet elapsed.
+
+### HIGH VPD After OFF Timer
+
+    Input VPD     : 1.70 kPa
+    Humidity      : 50.0 %
+    VPD Status    : HIGH
+    Humidifier    : ON
+    Timing Lock   : OFF
+
+The relay activated after the minimum OFF time elapsed.
+
+### Early OFF Request
+
+    Input VPD     : 1.30 kPa
+    Humidity      : 50.0 %
+    VPD Status    : IN RANGE
+    Humidifier    : ON
+    Timing Lock   : ACTIVE
+
+The relay remained ON because the minimum ON time had not yet elapsed.
+
+### OFF After ON Timer
+
+    Input VPD     : 1.30 kPa
+    Humidity      : 50.0 %
+    VPD Status    : IN RANGE
+    Humidifier    : OFF
+    Timing Lock   : OFF
+
+The relay switched OFF after the minimum ON time elapsed.
+
+### Early ON Request
+
+    Input VPD     : 1.70 kPa
+    Humidity      : 50.0 %
+    VPD Status    : HIGH
+    Humidifier    : OFF
+    Timing Lock   : ACTIVE
+
+The relay remained OFF because the minimum OFF time had not yet elapsed.
+
+### ON After OFF Timer
+
+    Input VPD     : 1.70 kPa
+    Humidity      : 50.0 %
+    VPD Status    : HIGH
+    Humidifier    : ON
+    Timing Lock   : OFF
+
+The relay activated after the minimum OFF time elapsed.
+
+### High Humidity Safety
+
+    Input VPD     : 1.70 kPa
+    Humidity      : 90.0 %
+    VPD Status    : HIGH
+    Humidifier    : OFF
+    Timing Lock   : OFF
+    RH Safety     : ACTIVE
+
+The humidity safety system correctly overrode the VPD control request and
+forced the humidifier OFF.
+
+### Invalid Input Fail-Safe
+
+    Input VPD     : INVALID
+    Humidity      : INVALID
+    VPD Status    : INVALID
+    Humidifier    : OFF
+    Timing Lock   : OFF
+    RH Safety     : OFF
+
+The controller correctly entered fail-safe behavior and kept the relay OFF.
+
+## Result
+
+The relay and control safety protections operated correctly.
+
+The firmware successfully validated:
+
+- Safe OFF startup
+- Minimum relay ON time
+- Minimum relay OFF time
+- Timing lockout behavior
+- Maximum humidity safety override
+- Invalid sensor input fail-safe behavior
+
+## Status
+
+- [x] PASS
+- [ ] FAIL
+
+## Evidence
+
+Serial Monitor screenshot:
+
+    relay-control-safety-pass.png

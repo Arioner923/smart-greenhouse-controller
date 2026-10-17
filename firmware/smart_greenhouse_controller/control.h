@@ -32,6 +32,7 @@ void initializeControl();
  */
 ControlState updateVPDControl(
     float currentVPD,
+    float currentHumidityPercent,
     bool inputValid
 );
 

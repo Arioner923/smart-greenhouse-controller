@@ -3,133 +3,85 @@
 
 #include "config.h"
 #include "types.h"
-#include "sensors.h"
-#include "vpd.h"
 #include "control.h"
 
 
-/*
- * Smart Greenhouse Controller
- * Main Application
- *
- * Current data flow:
- *
- * Sensors
- *    ↓
- * SensorData
- *    ↓
- * Air VPD
- *    ↓
- * Growth-stage profile
- *    ↓
- * Control logic
- *    ↓
- * Humidifier relay
- */
-
-
-/*
- * Stores the time of the previous measurement cycle.
- *
- * This allows the controller to read the sensors at the
- * configured interval without continuously flooding the
- * Serial Monitor.
- */
-static unsigned long lastMeasurementTime = 0;
-
-
-/*
- * Print the current system state to the Serial Monitor.
- */
-static void printSystemStatus(
-    const SensorData& data,
-    float airVPD,
-    const ControlState& controlState
+static void printControlState(
+    const char* testName,
+    float vpd,
+    float humidity,
+    bool inputValid,
+    const ControlState& state
 )
 {
-    const VPDProfile& profile =
-        getActiveVPDProfile();
-
     Serial.println("--------------------------------");
 
-    Serial.print("Growth Stage : ");
-    Serial.println(profile.name);
+    Serial.print("Test          : ");
+    Serial.println(testName);
 
-    Serial.println();
-
-    if (data.environmentalSensorValid)
+    if (inputValid)
     {
-        Serial.print("Temperature  : ");
-        Serial.print(data.temperature, 2);
-        Serial.println(" C");
-
-        Serial.print("Humidity     : ");
-        Serial.print(data.humidity, 2);
-        Serial.println(" %");
-
-        Serial.print("Pressure     : ");
-        Serial.print(data.pressure, 2);
-        Serial.println(" hPa");
-    }
-    else
-    {
-        Serial.println("Environmental sensor data: INVALID");
-    }
-
-    Serial.println();
-
-    Serial.print("Soil RAW     : ");
-    Serial.println(data.soilRaw);
-
-    Serial.print("Soil Moist.  : ");
-    Serial.print(data.soilPercent, 1);
-    Serial.println(" %");
-
-    Serial.println();
-
-    if (!isnan(airVPD))
-    {
-        Serial.print("Air VPD      : ");
-        Serial.print(airVPD, 2);
+        Serial.print("Input VPD     : ");
+        Serial.print(vpd, 2);
         Serial.println(" kPa");
+
+        Serial.print("Humidity      : ");
+        Serial.print(humidity, 1);
+        Serial.println(" %");
     }
     else
     {
-        Serial.println("Air VPD      : INVALID");
+        Serial.println("Input VPD     : INVALID");
+        Serial.println("Humidity      : INVALID");
     }
 
-    Serial.print("Target       : ");
-    Serial.print(profile.targetVPD, 2);
-    Serial.println(" kPa");
-
-    Serial.print("Range        : ");
-    Serial.print(profile.minVPD, 2);
-    Serial.print(" - ");
-    Serial.print(profile.maxVPD, 2);
-    Serial.println(" kPa");
-
-    if (controlState.controlValid)
+    if (state.controlValid)
     {
-        Serial.print("VPD Status   : ");
-        Serial.println(
-            vpdStatusToString(controlState.vpdStatus)
-        );
+        Serial.print("VPD Status    : ");
+        Serial.println(vpdStatusToString(state.vpdStatus));
     }
     else
     {
-        Serial.println("VPD Status   : INVALID");
+        Serial.println("VPD Status    : INVALID");
     }
 
-    Serial.println();
-
-    Serial.print("Humidifier   : ");
+    Serial.print("Humidifier    : ");
     Serial.println(
-        controlState.humidifierOn ? "ON" : "OFF"
+        state.humidifierOn ? "ON" : "OFF"
     );
 
-    Serial.print("Control      : ");
+    Serial.print("Timing Lock   : ");
     Serial.println(
-        controlState.controlValid ? "ACTIVE" : "FAIL-SAFE"
+        state.relayTimingLockout ? "ACTIVE" : "OFF"
+    );
+
+    Serial.print("RH Safety     : ");
+    Serial.println(
+        state.humiditySafetyActive ? "ACTIVE" : "OFF"
+    );
+}
+
+
+void runTest(
+    const char* testName,
+    float vpd,
+    float humidity,
+    bool inputValid
+)
+{
+    const ControlState state =
+        updateVPDControl(
+            vpd,
+            humidity,
+            inputValid
+        );
+
+    printControlState(
+        testName,
+        vpd,
+        humidity,
+        inputValid,
+        state
     );
 }
 
@@ -143,139 +95,174 @@ void setup()
     Serial.println();
     Serial.println("================================");
     Serial.println(" Smart Greenhouse Controller");
-    Serial.println(" Automatic VPD Control");
+    Serial.println(" SW-05 Relay & Control Safety");
     Serial.println("================================");
     Serial.println();
 
-
-    /*
-     * IMPORTANT:
-     *
-     * Initialize the control system first.
-     *
-     * This immediately configures the relay output and
-     * places the humidifier in the safe OFF state before
-     * sensor initialization begins.
-     */
     initializeControl();
 
+    Serial.println("Control initialization: PASS");
+    Serial.println("Initial relay state    : OFF");
+    Serial.println();
+
 
     /*
-     * Initialize the connected sensors.
+     * TEST 1
+     *
+     * Request ON immediately after startup.
+     *
+     * Expected:
+     * OFF because minimum OFF time has not elapsed.
      */
-    if (!initializeSensors())
-    {
-        Serial.println("ERROR: Sensor initialization failed.");
-        Serial.println("Automatic VPD control disabled.");
-        Serial.println("Humidifier remains OFF.");
-
-        /*
-         * The relay has already been initialized OFF.
-         *
-         * Stop normal execution because automatic control
-         * cannot operate safely without the environmental sensor.
-         */
-        while (true)
-        {
-            delay(1000);
-        }
-    }
+    runTest(
+        "STARTUP OFF LOCKOUT",
+        1.70f,
+        50.0f,
+        true
+    );
 
 
-    Serial.println("Sensor initialization : PASS");
-    Serial.println("Control initialization: PASS");
+    /*
+     * Wait until minimum OFF time has elapsed.
+     */
+    delay(MIN_RELAY_OFF_TIME_MS + 500);
 
-    Serial.println();
 
-    const VPDProfile& profile =
-        getActiveVPDProfile();
+    /*
+     * TEST 2
+     *
+     * HIGH VPD after OFF lockout expires.
+     *
+     * Expected:
+     * ON
+     */
+    runTest(
+        "HIGH VPD AFTER OFF TIMER",
+        1.70f,
+        50.0f,
+        true
+    );
 
-    Serial.print("Selected Profile      : ");
-    Serial.println(profile.name);
 
-    Serial.print("Target VPD            : ");
-    Serial.print(profile.targetVPD, 2);
-    Serial.println(" kPa");
+    /*
+     * TEST 3
+     *
+     * Request OFF immediately.
+     *
+     * Expected:
+     * Relay remains ON because minimum ON time
+     * has not yet elapsed.
+     */
+    runTest(
+        "EARLY OFF REQUEST",
+        1.30f,
+        50.0f,
+        true
+    );
 
-    Serial.print("VPD Range             : ");
-    Serial.print(profile.minVPD, 2);
-    Serial.print(" - ");
-    Serial.print(profile.maxVPD, 2);
-    Serial.println(" kPa");
 
-    Serial.println();
+    /*
+     * Wait until minimum ON time has elapsed.
+     */
+    delay(MIN_RELAY_ON_TIME_MS + 500);
+
+
+    /*
+     * TEST 4
+     *
+     * Request OFF after minimum ON time.
+     *
+     * Expected:
+     * OFF
+     */
+    runTest(
+        "OFF AFTER ON TIMER",
+        1.30f,
+        50.0f,
+        true
+    );
+
+
+    /*
+     * TEST 5
+     *
+     * Immediately request ON again.
+     *
+     * Expected:
+     * Relay remains OFF because minimum OFF
+     * time has not elapsed.
+     */
+    runTest(
+        "EARLY ON REQUEST",
+        1.70f,
+        50.0f,
+        true
+    );
+
+
+    /*
+     * Wait until minimum OFF time has elapsed.
+     */
+    delay(MIN_RELAY_OFF_TIME_MS + 500);
+
+
+    /*
+     * TEST 6
+     *
+     * HIGH VPD after OFF timer expires.
+     *
+     * Expected:
+     * ON
+     */
+    runTest(
+        "ON AFTER OFF TIMER",
+        1.70f,
+        50.0f,
+        true
+    );
+
+
+    /*
+     * TEST 7
+     *
+     * Humidity safety condition.
+     *
+     * Expected:
+     * Immediate OFF even though minimum ON
+     * time has not elapsed.
+     */
+    runTest(
+        "HIGH HUMIDITY SAFETY",
+        1.70f,
+        90.0f,
+        true
+    );
+
+
+    /*
+     * TEST 8
+     *
+     * Invalid sensor input.
+     *
+     * Expected:
+     * Immediate OFF / fail-safe.
+     */
+    runTest(
+        "INVALID INPUT FAIL-SAFE",
+        NAN,
+        NAN,
+        false
+    );
+
+
+    Serial.println("--------------------------------");
+    Serial.println("SW-05 safety test complete.");
 }
 
 
 void loop()
 {
-    const unsigned long currentTime = millis();
-
     /*
-     * Execute one measurement/control cycle at the
-     * configured interval.
+     * Test sequence runs once during setup().
      */
-    if (currentTime - lastMeasurementTime <
-        SENSOR_READ_INTERVAL_MS)
-    {
-        return;
-    }
-
-    lastMeasurementTime = currentTime;
-
-
-    /*
-     * STEP 1:
-     * Acquire real sensor measurements.
-     */
-    const SensorData data =
-        readSensors();
-
-
-    /*
-     * STEP 2:
-     * Calculate Air VPD only when the environmental
-     * measurements are valid.
-     */
-    float airVPD = NAN;
-
-    if (data.environmentalSensorValid)
-    {
-        airVPD = calculateAirVPD(
-            data.temperature,
-            data.humidity
-        );
-    }
-
-
-    /*
-     * STEP 3:
-     * Determine whether the control input is valid.
-     */
-    const bool controlInputValid =
-        data.environmentalSensorValid &&
-        !isnan(airVPD);
-
-
-    /*
-     * STEP 4:
-     * Evaluate the selected VPD profile and automatically
-     * update the humidifier relay.
-     */
-    const ControlState controlState =
-        updateVPDControl(
-            airVPD,
-            controlInputValid
-        );
-
-
-    /*
-     * STEP 5:
-     * Print the complete system state.
-     */
-    printSystemStatus(
-        data,
-        airVPD,
-        controlState
-    );
 }

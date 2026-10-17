@@ -221,6 +221,9 @@ are stored in the `validation` documentation.
 - [x] VPD module integration validated
 - [x] Control module implemented
 - [x] Automatic VPD control validated
+- [x] Relay timing protection validated
+- [x] Humidity safety cutoff validated
+- [x] Invalid-input fail-safe validated
 
 ### Hardware Validation
 
