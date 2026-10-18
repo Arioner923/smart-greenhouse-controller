@@ -39,6 +39,8 @@ D5 / GPIO14  -> Relay Signal
 GND          -> Common Ground
 ```
 
-Notes
+## Notes
+
 The shield has been designed so that sensors can be disconnected and replaced without desoldering the main controller board.
+
 The relay control side operates at low voltage. Any future mains-voltage wiring must be kept physically isolated from the prototype shield.

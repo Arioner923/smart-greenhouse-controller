@@ -7,7 +7,8 @@
  * Handles:
  * - connection to previously saved Wi-Fi
  * - captive portal setup
- * - Wi-Fi connection status
+ * - Wi-Fi connection status and runtime recovery
+ * - local mDNS hostname service
  * - credential reset for maintenance/testing
  */
 

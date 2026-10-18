@@ -29,11 +29,9 @@ Wiring:
     SCL   ------------> D1 / GPIO5
     SDA   ------------> D2 / GPIO4
 
-The breakout board is marked `GY-BME/P280`.
+The breakout board is marked `GY-BME/P280`. Hardware validation confirmed that the installed device is a **BME280** with chip ID `0x60` at I2C address `0x76`.
 
-The exact sensor type will therefore be verified during the first hardware test to confirm whether the installed chip is a BME280 or BMP280.
-
-A BME280 provides:
+The BME280 provides:
 
 - Air temperature
 - Relative humidity
@@ -63,14 +61,12 @@ Wiring:
 
 The sensor is powered from 3.3V.
 
-During the first tests, the firmware will display the raw ADC reading without converting it to a percentage.
+The current firmware converts the raw ADC value to a project-specific relative moisture scale using validated calibration references:
 
-A calibration procedure will later determine reference values for:
+    Air reference   : 746
+    Water reference : 390
 
-- Dry condition
-- Wet condition
-
-These values will then be used to calculate an estimated soil moisture percentage.
+The result is a relative percentage and must not be interpreted as volumetric water content (VWC). The firmware also classifies the value into provisional `VERY DRY`, `DRY`, `GOOD`, `WET` and `VERY WET` status zones.
 
 ---
 
@@ -98,15 +94,12 @@ Wiring:
     G     ------------> GND
     S     ------------> D5 / GPIO14
 
-The relay trigger logic has not yet been verified.
+Hardware validation confirmed that the relay input is **active HIGH**:
 
-The first relay test will determine whether the module is:
+    LOW  -> Relay OFF
+    HIGH -> Relay ON
 
-- Active HIGH
-or
-- Active LOW
-
-No mains-powered device will be connected during the initial relay test.
+Validation was performed on the low-voltage control side without a mains-powered load.
 
 ---
 
@@ -186,21 +179,20 @@ All low-voltage devices share a common ground:
 
 ---
 
-## Pending Hardware Validation
+## Hardware Validation Status
 
-- [ ] Verify ESP8266 boot
-- [ ] Scan I2C bus
-- [ ] Detect BME280/BMP280
-- [ ] Read air temperature
-- [ ] Read relative humidity
-- [ ] Read atmospheric pressure
-- [ ] Read raw soil ADC value
-- [ ] Calibrate soil moisture sensor
-- [ ] Determine relay trigger logic
-- [ ] Test relay ON/OFF
-- [ ] Test all devices together
+- [x] ESP8266 boot
+- [x] I2C bus communication
+- [x] BME280 identification
+- [x] Temperature / humidity / pressure readings
+- [x] Soil sensor raw ADC validation
+- [x] Soil calibration references
+- [x] Relay trigger logic
+- [x] Relay ON/OFF operation
+- [x] Combined hardware operation
 
 ---
+
 
 ## Safety
 

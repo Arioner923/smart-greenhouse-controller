@@ -50,8 +50,9 @@ constexpr int SOIL_WATER_REFERENCE = 390;
 /*
  * Provisional soil-moisture classification thresholds.
  *
- * These values will be refined using measurements
- * from real soil samples during SW-10 validation.
+ * These boundaries were functionally validated during SW-10. They remain
+ * provisional agronomic thresholds and may be refined with additional
+ * measurements from the actual growing medium.
  */
 constexpr float SOIL_VERY_DRY_MAX_PERCENT = 20.0f;
 constexpr float SOIL_DRY_MAX_PERCENT      = 35.0f;
@@ -115,8 +116,8 @@ constexpr float MAX_SAFE_HUMIDITY_PERCENT = 85.0f;
  * For the first firmware version, the growth stage is selected
  * here during compilation.
  *
- * A future web interface may allow this value to be changed
- * without uploading new firmware.
+ * Runtime growth-stage selection is planned for a later firmware step.
+ * Until then, changing this value requires recompiling the firmware.
  * 
  * Select ONE growth stage:
  *
@@ -164,7 +165,8 @@ constexpr VPDProfile VPD_PROFILES[] =
  *
  * Default mode after ESP8266 startup.
  *
- * The mode will later be selectable from the web dashboard.
+ * The web dashboard can change the mode at runtime; this value defines
+ * only the startup default after boot.
  */
 
 constexpr ControlMode DEFAULT_CONTROL_MODE =
@@ -201,6 +203,7 @@ constexpr char WIFI_SETUP_AP_PASSWORD[] =
  */
 constexpr char WIFI_MDNS_HOSTNAME[] =
     "smartgreenhouse";
+
 /*
  * Maximum time that the configuration portal
  * remains active before returning control

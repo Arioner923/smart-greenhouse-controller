@@ -117,8 +117,8 @@ SensorData readSensors()
     data.soilPercent = convertSoilRawToPercent(data.soilRaw);
 
     /*
-    * Classify the calibrated soil-moisture value.
-    */
+     * Classify the calibrated soil-moisture value.
+     */
     data.soilStatus =
         classifySoilMoisture(
             data.soilPercent

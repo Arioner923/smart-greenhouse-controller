@@ -17,7 +17,7 @@
  * Current capabilities:
  *
  * - Environmental measurements
- * - Soil moisture monitoring
+ * - Soil moisture monitoring and status classification
  * - Air VPD calculation
  * - Growth-stage VPD profiles
  * - AUTO / MANUAL operation
@@ -27,6 +27,9 @@
  * - Wi-Fi provisioning
  * - Persistent Wi-Fi credentials
  * - Offline greenhouse operation
+ * - Local web monitoring and control
+ * - Local mDNS hostname access
+ * - JSON live-status API and browser-side live updates
  */
 
 
@@ -275,11 +278,11 @@ void setup()
     }
 
     /*
-    * Initialize the local monitoring dashboard.
-    *
-    * If Wi-Fi is unavailable, the server will
-    * start automatically when Wi-Fi reconnects.
-    */
+     * Initialize the local monitoring dashboard.
+     *
+     * If Wi-Fi is unavailable, the server will
+     * start automatically when Wi-Fi reconnects.
+     */
     initializeWebServer();
 
 
@@ -331,8 +334,8 @@ void loop()
     processWiFiProvisioning();
 
     /*
-    * Keep the local dashboard responsive.
-    */
+     * Keep the local dashboard responsive.
+     */
     processWebServer();
 
 
@@ -406,9 +409,9 @@ void loop()
         );
         
     /*
-    * Publish the latest control-cycle snapshot
-    * to the local web dashboard.
-    */
+     * Publish the latest control-cycle snapshot
+     * to the local web dashboard.
+     */
     updateWebServerData(
         data,
         airVPD,

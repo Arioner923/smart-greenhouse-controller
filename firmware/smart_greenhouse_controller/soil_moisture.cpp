@@ -3,6 +3,16 @@
 #include "config.h"
 
 
+/*
+ * Smart Greenhouse Controller
+ * Soil Moisture Classification Module Implementation
+ *
+ * Classification boundaries are defined centrally in config.h. The module
+ * contains no irrigation logic; it only translates the calibrated relative
+ * moisture value into a reusable status.
+ */
+
+
 SoilMoistureStatus classifySoilMoisture(
     float soilMoisturePercent
 )

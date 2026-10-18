@@ -875,6 +875,14 @@ The firmware successfully validated:
 
     local-web-dashboard-pass.png
 
+### Later Implementation Note
+
+SW-08 validated the original dashboard implementation, which refreshed the
+complete page every three seconds. A later refactor replaced periodic
+full-page refreshes with browser-side polling of `GET /api/status`. The SW-08
+evidence is intentionally kept as the historical validation record for the
+implementation that was tested at that milestone.
+
 # SW-09 - Web-based Control
 
 ## Objective

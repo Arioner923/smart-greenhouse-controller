@@ -1,31 +1,34 @@
 # Smart Greenhouse Controller
 
-An ESP8266-based smart greenhouse monitoring and automation project.
+An ESP8266-based smart greenhouse monitoring and automation project built as a
+personal embedded / IoT project.
 
-The system is designed to monitor environmental and soil conditions and,
-at later development stages, automatically control greenhouse equipment
-such as a humidifier, ventilation fan and irrigation system.
+The current prototype monitors environmental and soil conditions, calculates
+Air Vapor Pressure Deficit (VPD), and controls a humidifier through a protected
+AUTO / MANUAL control layer. A local responsive web dashboard provides live
+monitoring and control over Wi-Fi.
 
-> 🚧 This project is currently under active development.
+> 🚧 This project is under active development. The current hardware is a
+> low-voltage prototype, not an industrial or mains-ready controller.
 
 ---
 
 ## Current Hardware
 
-### Main Controller
+### Controller
 
 - WeMos D1 R2 V2.1.0
-- ESP8266-based development board
+- ESP8266
 
 ### Sensors
 
-- BME280 environmental sensor
+- BME280
   - Air temperature
   - Relative humidity
   - Atmospheric pressure
-- Capacitive soil moisture sensor
+- Capacitive analog soil-moisture sensor
 
-### Actuator
+### Actuator Interface
 
 - ACEBOTT 5V relay module
 - SONGLE SRD-05VDC-SL-C relay
@@ -33,7 +36,7 @@ such as a humidifier, ventilation fan and irrigation system.
 
 ---
 
-## Current Shield Pinout
+## Pin Assignment
 
 | Function | WeMos D1 R2 Pin | ESP8266 GPIO |
 |---|---|---|
@@ -50,26 +53,58 @@ such as a humidifier, ventilation fan and irrigation system.
 | Soil Moisture Sensor | 3.3V |
 | Relay Module | 5V |
 
-All low-voltage modules share a common GND.
+All low-voltage modules share a common ground.
 
 ---
 
-## Current Measurements
+## Current Firmware Features
 
-The current prototype can measure and calculate:
+### Monitoring
 
 - Air temperature
 - Relative humidity
 - Atmospheric pressure
-- Raw soil moisture ADC value
-- Estimated soil moisture percentage
-- Air Vapor Pressure Deficit (VPD)
+- Raw soil ADC value
+- Calibrated relative soil-moisture percentage
+- Soil-moisture status classification
+- Air VPD
+- Wi-Fi connection information
+
+### Control
+
+- Automatic VPD-based humidifier control
+- Manual humidifier control
+- AUTO / MANUAL operating modes
+- Minimum relay ON/OFF timing protection
+- Maximum-humidity safety cutoff
+- Invalid-input fail-safe
+- Safe relay OFF state during startup and mode changes
+
+### Connectivity and Web UI
+
+- WiFiManager-based Wi-Fi provisioning
+- Persistent Wi-Fi credentials
+- Runtime Wi-Fi recovery
+- Greenhouse operation independent of Wi-Fi availability
+- Local mDNS hostname:
+
+      http://smartgreenhouse.local/
+
+- Responsive local web dashboard
+- Live JSON status endpoint:
+
+      GET /api/status
+
+- Browser-side live updates without periodic full-page reloads
+- Web control for AUTO / MANUAL and humidifier ON / OFF
+- Server-side blocking of manual actuator commands while AUTO mode is active
 
 ---
 
 ## Soil Moisture Calibration
 
-The current capacitive soil moisture sensor was calibrated using:
+The current capacitive sensor uses the following relative calibration
+references:
 
     Air reference   : 746
     Water reference : 390
@@ -79,219 +114,128 @@ Relative scale:
     0%   = Air reference
     100% = Water reference
 
-Real soil validation:
+Current provisional status zones:
 
-    Dry soil                : ~744 RAW
-    Well-watered soil       : 469 - 481 RAW
+| Relative Moisture | Status |
+|---:|---|
+| < 20% | VERY DRY |
+| 20% to < 35% | DRY |
+| 35% to < 60% | GOOD |
+| 60% to < 80% | WET |
+| >= 80% | VERY WET |
 
-The calculated percentage represents a relative moisture scale and does not
-represent absolute volumetric water content.
-
----
-
-## Current Automation Hardware
-
-The relay module has been validated successfully.
-
-Observed behavior:
-
-    LOW  -> Relay OFF
-    HIGH -> Relay ON
-
-The relay will initially be used to control a humidifier.
+The percentage is a project-specific relative scale. It must not be interpreted
+as volumetric water content (VWC), and the status boundaries may be refined
+with additional measurements from the actual growing medium.
 
 ---
 
-## VPD
+## VPD Profiles
 
-Air VPD is calculated using:
+The current firmware contains three configurable growth-stage profiles.
+Runtime growth-stage selection is planned; at present the startup profile is
+selected in `config.h`.
 
-- BME280 air temperature
-- BME280 relative humidity
+| Growth Stage | Min VPD | Target VPD | Max VPD |
+|---|---:|---:|---:|
+| Propagation / Early Veg | 0.4 kPa | 0.6 kPa | 0.8 kPa |
+| Late Veg / Early Flower | 0.8 kPa | 1.0 kPa | 1.2 kPa |
+| Mid / Late Flower | 1.2 kPa | 1.4 kPa | 1.6 kPa |
 
-A future MLX90614 infrared temperature sensor may be added to measure leaf
-temperature and calculate Leaf VPD.
-
----
-
-## VPD Control Profiles
-
-The controller is designed to support selectable growth-stage VPD profiles.
-
-### Propagation / Early Veg
-
-    VPD Range  : 0.4 - 0.8 kPa
-    Target VPD : 0.6 kPa
-
-### Late Veg / Early Flower
-
-    VPD Range  : 0.8 - 1.2 kPa
-    Target VPD : 1.0 kPa
-
-### Mid / Late Flower
-
-    VPD Range  : 1.2 - 1.6 kPa
-    Target VPD : 1.4 kPa
-
-Automatic humidifier control will use hysteresis to prevent rapid relay
-switching.
+These are project configuration profiles rather than universal crop targets.
 
 ---
 
-## Planned Automation
+## Software Architecture
 
-The first automatic control function will regulate VPD using the humidifier.
+The firmware is intentionally split into small modules:
 
-Future control functions may include:
+```text
+smart_greenhouse_controller.ino
+        |
+        +-- sensors.*            sensor acquisition and validation
+        +-- soil_moisture.*      relative moisture classification
+        +-- vpd.*                Air VPD calculations
+        +-- control.*            AUTO / MANUAL control and safety
+        +-- wifi_provisioning.*  Wi-Fi provisioning, recovery and mDNS
+        +-- web_server.*         HTTP routes, status API and web commands
+        +-- dashboard_page.h     embedded HTML / CSS
+        +-- dashboard_script.h   embedded browser-side JavaScript
+        +-- config.h             hardware and operating configuration
+        `-- types.h              shared data structures and enums
+```
 
-- Irrigation
-- Ventilation
-- Dehumidification
-- Lighting
-- Environmental alarms
+The web interface does not write the relay GPIO directly. Commands are passed
+to the control module so relay timing, humidity safety and fail-safe behavior
+remain authoritative.
 
----
-
-## Planned Sensors and Upgrades
-
-Future development may include:
-
-- MLX90614 infrared leaf temperature sensor
-- Light / lux sensor
-- Estimated PPFD
-- Daily Light Integral (DLI)
-- CO₂ sensor
-- Multiple soil moisture sensors
-- External ADC
-- Water level sensor
-- Web dashboard
-- Data logging
+See [`docs/software-architecture.md`](docs/software-architecture.md) for the
+full architecture description.
 
 ---
 
-## Development Method
-
-The project is developed incrementally.
-
-Each hardware and firmware feature is:
-
-1. Implemented
-2. Tested on real hardware
-3. Validated
-4. Documented
-5. Committed separately to the repository
-
-Hardware and firmware validation results, together with selected evidence,
-are stored in the `validation` documentation.
-
----
-
-## Current Project Status
+## Validation Status
 
 ### Hardware
 
-- [x] WeMos D1 R2 selected
-- [x] Prototype shield assembled
-- [x] BME280 connected
-- [x] Soil moisture sensor connected
-- [x] Relay module connected
-
-### Hardware Validation
-
 - [x] ESP8266 boot validation
 - [x] I2C communication
-- [x] BME280 identification
-- [x] Temperature measurement
-- [x] Relative humidity measurement
-- [x] Atmospheric pressure measurement
+- [x] BME280 identification (`0x60`, address `0x76`)
+- [x] Temperature / humidity / pressure readings
 - [x] Soil sensor raw ADC validation
-- [x] Soil sensor calibration
-- [x] Relay ON/OFF validation
-- [x] Combined hardware test
+- [x] Soil calibration references
+- [x] Relay trigger logic
+- [x] Combined hardware operation
 - [x] Air VPD calculation
 
-### Firmware Development
+### Firmware
 
-- [x] Software architecture defined
-- [x] Shared data types implemented
-- [x] System configuration implemented
-- [x] Sensor module implemented
-- [x] Sensor module integration validated
-- [x] VPD calculation module implemented
-- [x] VPD module integration validated
-- [x] Control module implemented
-- [x] Automatic VPD control validated
-- [x] Relay timing protection validated
-- [x] Humidity safety cutoff validated
-- [x] Invalid-input fail-safe validated
-- [x] AUTO operating mode validated
-- [x] MANUAL operating mode validated
-- [x] Safe operating-mode transitions validated
-- [x] Manual control safety overrides validated
-- [x] Wi-Fi provisioning implemented
-- [x] Captive portal validated
-- [x] Wi-Fi credentials persistence validated
-- [x] Automatic Wi-Fi reconnection validated
-- [x] Network failure recovery validated
-- [x] Offline greenhouse operation validated
-- [x] Runtime Wi-Fi reconnection validated
-- [x] Local web dashboard implemented
-- [x] Live sensor data display validated
-- [x] Automatic dashboard refresh validated
-- [x] Controller status display validated
-- [x] Network status display validated
-- [x] Web-based operating mode control validated
-- [x] Manual humidifier ON/OFF control validated
-- [x] Manual control disabled in AUTO mode
-- [x] Controller state feedback validated
-- [x] Visual actuator-state feedback implemented
-- [x] Local mDNS hostname access validated
-- [x] Web control validated after Wi-Fi provisioning
-- [x] Web-based control validated
-- [x] Soil moisture status classification implemented
-- [x] Soil moisture visual status validated
-- [x] Soil moisture classification boundaries validated
+- [x] Modular sensor integration
+- [x] VPD module integration
+- [x] Automatic VPD control
+- [x] Relay timing protection
+- [x] Humidity safety cutoff
+- [x] Invalid-input fail-safe
+- [x] AUTO / MANUAL operation
+- [x] Wi-Fi provisioning and runtime recovery
+- [x] Offline greenhouse operation
+- [x] Local web dashboard
+- [x] Web-based controller operation
+- [x] Local mDNS access
+- [x] Soil-moisture status classification
+- [x] Soil classification boundary validation
 
-### Hardware Validation
+Validation notes and selected evidence are stored under `validation/`.
 
-- [x] ESP8266 boot validation
-- [x] I2C communication
-- [x] BME280 identification
-- [x] Temperature measurement
-- [x] Relative humidity measurement
-- [x] Atmospheric pressure measurement
-- [x] Soil sensor raw ADC validation
-- [x] Soil sensor calibration
-- [x] Relay ON/OFF validation
-- [x] Combined hardware test
-- [x] Air VPD calculation
+---
 
-### Completed Milestone
+## Milestone Tags
 
-Initial hardware validation completed successfully.
+- `v0.1-hardware-validation`
+- `v0.2-automatic-vpd-control`
 
-Git milestone tag:
+---
 
-    v0.1-hardware-validation
+## Planned Development
 
-### Current Development Stage
+Near-term development may include:
 
-The project is currently in the modular firmware implementation phase.
+- Runtime growth-stage selection
+- Persistent controller settings
+- MLX90614 leaf-temperature sensing
+- Leaf VPD
+- TSL2591 light / lux monitoring
+- Additional actuator channels
 
-Completed:
+Longer-term ideas include:
 
-- Software architecture design
-- Shared firmware data types
-- Centralized system configuration
-- Modular sensor implementation
-- Sensor module integration test
+- Historical data logging
+- microSD storage
+- Charts and event history
+- Mobile application
+- Optional remote access / cloud integration
 
-Current next steps:
-
-- Implement the control module
-- Add growth-stage profile selection
-- Implement automatic humidifier control
-- Validate relay hysteresis and safety behavior
+These are roadmap ideas and are not part of the current validated prototype.
 
 ---
 
@@ -299,25 +243,31 @@ Current next steps:
 
 ```text
 smart-greenhouse-controller/
-├── README.md
-├── firmware/
-├── hardware/
-├── docs/
-├── validation/
-└── assets/
+├── firmware/      main controller firmware
+├── hardware/      standalone hardware-validation sketches
+├── docs/          architecture and wiring documentation
+├── validation/    test plans, results and evidence
+├── assets/        project images and supporting assets
+└── README.md
 ```
 
+---
+
 ## Safety
-The prototype shield contains only low-voltage control electronics.
-Any future 230V AC wiring must remain physically isolated from the prototype
-shield and must be installed inside a suitable insulated enclosure.
-Special care is required because the final system is intended for operation in
-an environment where water and high humidity may be present.
+
+The current prototype shield contains only low-voltage control electronics.
+
+Any future 230V AC switching must be physically isolated from the prototype
+shield and installed using appropriately rated components, enclosure,
+connectors, strain relief and protection suitable for a humid environment.
+
 ---
 
 ## Copyright
+
 Copyright © 2026 Arioner923. All rights reserved.
-This repository is publicly available for viewing and educational reference.
-No permission is granted to copy, redistribute, modify, publish or use the
-source code, documentation or hardware designs without explicit permission
-from the author.
+
+This repository is available for viewing and educational reference. No
+permission is granted to copy, redistribute, modify, publish or use the source
+code, documentation or hardware designs without explicit permission from the
+author.

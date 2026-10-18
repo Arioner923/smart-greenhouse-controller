@@ -4,11 +4,12 @@
 
 /*
  * Smart Greenhouse Controller
- * Local Web Dashboard
+ * Local Web Dashboard and Control Interface
  *
- * Provides a read-only local web interface
- * for monitoring greenhouse measurements
- * and controller state.
+ * Provides the local monitoring dashboard, the live JSON status API and
+ * web-based operating-mode / humidifier commands. Actuator commands are
+ * forwarded to the control module so existing safety protections remain
+ * authoritative.
  */
 
 

@@ -8,6 +8,18 @@
 
 
 /*
+ * Smart Greenhouse Controller
+ * Wi-Fi Provisioning Module Implementation
+ *
+ * Responsibilities:
+ * - Connect using previously saved Wi-Fi credentials
+ * - Provide a non-blocking WiFiManager setup portal when needed
+ * - Recover from temporary network loss without stopping control logic
+ * - Start and maintain the local smartgreenhouse.local mDNS service
+ */
+
+
+/*
  * WiFiManager instance used by this module.
  */
 static WiFiManager wifiManager;
@@ -117,8 +129,8 @@ bool initializeWiFiProvisioning()
     WiFi.mode(WIFI_STA);
 
     /*
-    * Friendly DHCP/device hostname.
-    */
+     * Friendly DHCP/device hostname.
+     */
     WiFi.hostname(
         WIFI_MDNS_HOSTNAME
     );
@@ -192,8 +204,8 @@ bool initializeWiFiProvisioning()
     printWiFiStatus();
 
     /*
-    * Start local hostname service.
-    */
+     * Start local hostname service.
+     */
     startMDNSIfPossible();
 
     return true;

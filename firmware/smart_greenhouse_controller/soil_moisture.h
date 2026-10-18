@@ -3,6 +3,18 @@
 #include "types.h"
 
 /*
+ * Smart Greenhouse Controller
+ * Soil Moisture Classification Module Interface
+ *
+ * Converts the calibrated relative soil-moisture percentage into a
+ * descriptive status used by diagnostics and the local dashboard.
+ *
+ * The percentage is a project-specific relative scale; it is not
+ * volumetric water content (VWC).
+ */
+
+
+/*
  * Classify a calibrated relative soil-moisture
  * percentage into a human-readable status.
  */
