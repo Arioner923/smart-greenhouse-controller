@@ -7,6 +7,7 @@
 #include "control.h"
 #include "web_server.h"
 #include "dashboard_page.h"
+#include "dashboard_script.h"
 #include "soil_moisture.h"
 
 
@@ -15,7 +16,8 @@
  * Local Web Dashboard + Web Control
  *
  * Static dashboard HTML/CSS is stored in dashboard_page.h (PROGMEM).
- * Dynamic values and HTTP control routes remain in this module.
+ * Browser-side polling logic is stored in dashboard_script.h (PROGMEM).
+ * Dynamic values, JSON status data and HTTP control routes remain here.
  *
  * The page is sent in small HTTP chunks instead of being assembled as one
  * large String. This avoids large contiguous RAM allocations on ESP8266.
@@ -138,7 +140,7 @@ static void handleDashboard()
             "<div class='grid'>"
             "<div class='card'>"
             "<div class='label'>Temperature</div>"
-            "<div class='value'>"
+            "<div class='value' id='temperatureValue'>"
         ));
 
         if (latestSensorData.environmentalSensorValid)
@@ -155,7 +157,7 @@ static void handleDashboard()
             "</div></div>"
             "<div class='card'>"
             "<div class='label'>Humidity</div>"
-            "<div class='value'>"
+            "<div class='value' id='humidityValue'>"
         ));
 
         if (latestSensorData.environmentalSensorValid)
@@ -172,7 +174,7 @@ static void handleDashboard()
             "</div></div>"
             "<div class='card'>"
             "<div class='label'>Pressure</div>"
-            "<div class='value'>"
+            "<div class='value' id='pressureValue'>"
         ));
 
         if (latestSensorData.environmentalSensorValid)
@@ -189,7 +191,7 @@ static void handleDashboard()
             "</div></div>"
             "<div class='card'>"
             "<div class='label'>Soil Moisture</div>"
-            "<div class='value'>"
+            "<div class='value' id='soilValue'>"
         ));
 
         sendHtml(
@@ -209,31 +211,31 @@ static void handleDashboard()
         {
             case SoilMoistureStatus::VeryDry:
                 sendHtml(F(
-                    "<div class='soil-badge soil-very-dry'>"
+                    "<div id='soilStatusBadge' class='soil-badge soil-very-dry'>"
                 ));
                 break;
 
             case SoilMoistureStatus::Dry:
                 sendHtml(F(
-                    "<div class='soil-badge soil-dry'>"
+                    "<div id='soilStatusBadge' class='soil-badge soil-dry'>"
                 ));
                 break;
 
             case SoilMoistureStatus::Good:
                 sendHtml(F(
-                    "<div class='soil-badge soil-good'>"
+                    "<div id='soilStatusBadge' class='soil-badge soil-good'>"
                 ));
                 break;
 
             case SoilMoistureStatus::Wet:
                 sendHtml(F(
-                    "<div class='soil-badge soil-wet'>"
+                    "<div id='soilStatusBadge' class='soil-badge soil-wet'>"
                 ));
                 break;
 
             case SoilMoistureStatus::VeryWet:
                 sendHtml(F(
-                    "<div class='soil-badge soil-very-wet'>"
+                    "<div id='soilStatusBadge' class='soil-badge soil-very-wet'>"
                 ));
                 break;
         }
@@ -260,7 +262,7 @@ static void handleDashboard()
             "<div class='grid'>"
             "<div class='card'>"
             "<div class='label'>Air VPD</div>"
-            "<div class='value'>"
+            "<div class='value' id='airVpdValue'>"
         ));
 
         if (!isnan(latestAirVPD))
@@ -277,7 +279,7 @@ static void handleDashboard()
             "</div></div>"
             "<div class='card'>"
             "<div class='label'>Target VPD</div>"
-            "<div class='value'>"
+            "<div class='value' id='targetVpdValue'>"
         ));
 
         sendHtml(String(profile.targetVPD, 2));
@@ -287,7 +289,7 @@ static void handleDashboard()
             "</div></div>"
             "<div class='card'>"
             "<div class='label'>VPD Range</div>"
-            "<div class='value'>"
+            "<div class='value' id='vpdRangeValue'>"
         ));
 
         sendHtml(String(profile.minVPD, 2));
@@ -299,7 +301,7 @@ static void handleDashboard()
             "</div></div>"
             "<div class='card'>"
             "<div class='label'>VPD Status</div>"
-            "<div class='value status'>"
+            "<div class='value status' id='vpdStatusValue'>"
         ));
 
         if (latestControlState.controlValid)
@@ -323,16 +325,22 @@ static void handleDashboard()
             "<div class='grid'>"
             "<div class='card'>"
             "<div class='label'>Operating Mode</div>"
-            "<div class='value'>"
+            "<div class='value' id='modeValue'>"
         ));
 
-        sendHtml(String(controlModeToString(latestControlState.controlMode)));
-
+        sendHtml(
+            String(
+                controlModeToString(
+                    getControlMode()
+                )
+            )
+        );
+        
         sendHtml(F(
             "</div></div>"
             "<div class='card'>"
             "<div class='label'>Growth Stage</div>"
-            "<div class='value'>"
+            "<div class='value' id='growthStageValue'>"
         ));
 
         sendHtml(String(profile.name));
@@ -346,16 +354,18 @@ static void handleDashboard()
         if (latestControlState.humidifierOn)
         {
             sendHtml(F(
-                "<div class='state-badge state-on'>"
-                "ON"
+                "<div id='humidifierBadge' "
+                "class='state-badge state-on'>"
+                "<span id='humidifierValue'>ON</span>"
                 "</div>"
             ));
         }
         else
         {
             sendHtml(F(
-                "<div class='state-badge state-off'>"
-                "OFF"
+                "<div id='humidifierBadge' "
+                "class='state-badge state-off'>"
+                "<span id='humidifierValue'>OFF</span>"
                 "</div>"
             ));
         }
@@ -364,7 +374,7 @@ static void handleDashboard()
             "</div>"
             "<div class='card'>"
             "<div class='label'>Control</div>"
-            "<div class='value'>"
+            "<div class='value' id='controlValue'>"
         ));
 
         sendHtml(latestControlState.controlValid ? F("ACTIVE") : F("FAIL-SAFE"));
@@ -373,7 +383,7 @@ static void handleDashboard()
             "</div></div>"
             "<div class='card'>"
             "<div class='label'>Timing Lock</div>"
-            "<div class='value'>"
+            "<div class='value' id='timingLockValue'>"
         ));
 
         sendHtml(latestControlState.relayTimingLockout ? F("ACTIVE") : F("OFF"));
@@ -382,7 +392,7 @@ static void handleDashboard()
             "</div></div>"
             "<div class='card'>"
             "<div class='label'>RH Safety</div>"
-            "<div class='value'>"
+            "<div class='value' id='rhSafetyValue'>"
         ));
 
         sendHtml(latestControlState.humiditySafetyActive ? F("ACTIVE") : F("OFF"));
@@ -393,9 +403,14 @@ static void handleDashboard()
         ));
 
 
-        /*
-        * Control Actions.
-        */
+        /* =====================================================
+         * Control Actions
+         * =====================================================
+         *
+         * The form structure is always rendered, regardless of mode.
+         * JavaScript only changes disabled/highlight state. This keeps
+         * the DOM stable when AUTO and MANUAL are switched live.
+         */
         sendHtml(F(
             "<div class='section-title'>Control Actions</div>"
             "<div class='card'>"
@@ -403,19 +418,17 @@ static void handleDashboard()
             "<div class='controls'>"
         ));
 
-
-        /*
-        * Highlight the currently selected operating mode.
-        */
-        if (latestControlState.controlMode == ControlMode::Automatic)
+        if (getControlMode() == ControlMode::Automatic)
         {
             sendHtml(F(
                 "<form method='POST' action='/control/mode/auto'>"
-                "<button class='btn btn-primary' type='submit'>AUTO</button>"
+                "<button id='autoModeButton' class='btn btn-primary' "
+                "type='submit'>AUTO</button>"
                 "</form>"
 
                 "<form method='POST' action='/control/mode/manual'>"
-                "<button class='btn btn-secondary' type='submit'>MANUAL</button>"
+                "<button id='manualModeButton' class='btn btn-secondary' "
+                "type='submit'>MANUAL</button>"
                 "</form>"
             ));
         }
@@ -423,15 +436,16 @@ static void handleDashboard()
         {
             sendHtml(F(
                 "<form method='POST' action='/control/mode/auto'>"
-                "<button class='btn btn-secondary' type='submit'>AUTO</button>"
+                "<button id='autoModeButton' class='btn btn-secondary' "
+                "type='submit'>AUTO</button>"
                 "</form>"
 
                 "<form method='POST' action='/control/mode/manual'>"
-                "<button class='btn btn-primary' type='submit'>MANUAL</button>"
+                "<button id='manualModeButton' class='btn btn-primary' "
+                "type='submit'>MANUAL</button>"
                 "</form>"
             ));
         }
-
 
         sendHtml(F(
             "</div>"
@@ -440,68 +454,68 @@ static void handleDashboard()
             "<div class='card' style='margin-top:14px;'>"
             "<div class='label'>Manual Humidifier Control</div>"
             "<div class='controls'>"
+            "<form method='POST' action='/control/humidifier/on'>"
         ));
 
-        if (latestControlState.controlMode ==
-            ControlMode::Manual)
+        if (getControlMode() == ControlMode::Manual)
         {
-            /*
-            * Manual mode is active.
-            *
-            * Highlight the button that matches
-            * the actual humidifier output state.
-            */
             if (latestControlState.humidifierOn)
             {
                 sendHtml(F(
-                    "<form method='POST' action='/control/humidifier/on'>"
-                    "<button class='btn btn-active-on' type='submit'>"
-                    "ON"
-                    "</button>"
-                    "</form>"
-
-                    "<form method='POST' action='/control/humidifier/off'>"
-                    "<button class='btn btn-inactive' type='submit'>"
-                    "OFF"
-                    "</button>"
-                    "</form>"
+                    "<button id='humidifierOnButton' "
+                    "class='btn btn-active-on' type='submit'>ON</button>"
                 ));
             }
             else
             {
                 sendHtml(F(
-                    "<form method='POST' action='/control/humidifier/on'>"
-                    "<button class='btn btn-inactive' type='submit'>"
-                    "ON"
-                    "</button>"
-                    "</form>"
-
-                    "<form method='POST' action='/control/humidifier/off'>"
-                    "<button class='btn btn-active-off' type='submit'>"
-                    "OFF"
-                    "</button>"
-                    "</form>"
+                    "<button id='humidifierOnButton' "
+                    "class='btn btn-inactive' type='submit'>ON</button>"
                 ));
             }
         }
         else
         {
-            /*
-            * Manual controls are disabled while
-            * Automatic mode is active.
-            */
             sendHtml(F(
-                "<button class='btn btn-inactive' disabled>"
-                "ON"
-                "</button>"
-
-                "<button class='btn btn-inactive' disabled>"
-                "OFF"
-                "</button>"
+                "<button id='humidifierOnButton' "
+                "class='btn btn-inactive' type='submit' disabled>"
+                "ON</button>"
             ));
         }
 
         sendHtml(F(
+            "</form>"
+            "<form method='POST' action='/control/humidifier/off'>"
+        ));
+
+        if (getControlMode() == ControlMode::Manual)
+        {
+            if (latestControlState.humidifierOn)
+            {
+                sendHtml(F(
+                    "<button id='humidifierOffButton' "
+                    "class='btn btn-inactive' type='submit'>OFF</button>"
+                ));
+            }
+            else
+            {
+                sendHtml(F(
+                    "<button id='humidifierOffButton' "
+                    "class='btn btn-active-off' type='submit'>OFF</button>"
+                ));
+            }
+        }
+        else
+        {
+            sendHtml(F(
+                "<button id='humidifierOffButton' "
+                "class='btn btn-inactive' type='submit' disabled>"
+                "OFF</button>"
+            ));
+        }
+
+        sendHtml(F(
+            "</form>"
             "</div>"
             "</div>"
         ));
@@ -513,7 +527,7 @@ static void handleDashboard()
             "<div class='grid'>"
             "<div class='card'>"
             "<div class='label'>Wi-Fi</div>"
-            "<div class='value'>"
+            "<div class='value' id='wifiValue'>"
         ));
 
         sendHtml(WiFi.status() == WL_CONNECTED ? F("CONNECTED") : F("OFFLINE"));
@@ -525,7 +539,7 @@ static void handleDashboard()
             sendHtml(F(
                 "<div class='card'>"
                 "<div class='label'>IP Address</div>"
-                "<div class='value'>"
+                "<div class='value' id='ipValue'>"
             ));
 
             sendHtml(WiFi.localIP().toString());
@@ -534,7 +548,7 @@ static void handleDashboard()
                 "</div></div>"
                 "<div class='card'>"
                 "<div class='label'>Wi-Fi Signal</div>"
-                "<div class='value'>"
+                "<div class='value' id='rssiValue'>"
             ));
 
             sendHtml(String(WiFi.RSSI()));
@@ -552,14 +566,15 @@ static void handleDashboard()
         sendHtml(F(
             "<div class='footer'>"
             "Last sensor update: "
+            "<span id='lastUpdateValue'>"
         ));
 
         sendHtml(String((millis() - lastDataUpdateTime) / 1000));
-
         sendHtml(F(
+            "</span>"
             " seconds ago"
             "<br>"
-            "Dashboard refreshes automatically every 3 seconds."
+            "Live data updates automatically every 2 seconds."
             "</div>"
         ));
     }
@@ -574,6 +589,289 @@ static void handleDashboard()
     server.sendContent(String());
 }
 
+/*
+ * Serve the browser-side dashboard JavaScript from flash.
+ *
+ * Keeping the script as a separate HTTP resource makes dashboard_page.h
+ * easier to maintain without requiring a filesystem such as LittleFS.
+ */
+static void handleDashboardScript()
+{
+    server.sendHeader(
+        "Cache-Control",
+        "no-store"
+    );
+
+    server.setContentLength(
+        CONTENT_LENGTH_UNKNOWN
+    );
+
+    server.send(
+        200,
+        "application/javascript",
+        ""
+    );
+
+    server.sendContent_P(
+        DASHBOARD_SCRIPT
+    );
+
+    server.sendContent(
+        String()
+    );
+}
+
+
+/*
+ * Return the latest greenhouse state as JSON.
+ *
+ * This endpoint is used by the dashboard to update
+ * live values without reloading the entire HTML page.
+ */
+static void handleApiStatus()
+{
+    if (!dashboardDataAvailable)
+    {
+        server.send(
+            503,
+            "application/json",
+            "{\"available\":false}"
+        );
+
+        return;
+    }
+
+
+    const VPDProfile& profile =
+        getActiveVPDProfile();
+
+
+    String json;
+
+    /*
+     * Reserve enough space to reduce dynamic
+     * String reallocations on the ESP8266.
+     */
+    json.reserve(700);
+
+
+    json += F("{");
+
+    json += F("\"available\":true,");
+
+
+    /*
+     * Environmental measurements.
+     */
+    json += F("\"temperature\":");
+
+    if (latestSensorData.environmentalSensorValid)
+    {
+        json += String(
+            latestSensorData.temperature,
+            2
+        );
+    }
+    else
+    {
+        json += F("null");
+    }
+
+
+    json += F(",\"humidity\":");
+
+    if (latestSensorData.environmentalSensorValid)
+    {
+        json += String(
+            latestSensorData.humidity,
+            2
+        );
+    }
+    else
+    {
+        json += F("null");
+    }
+
+
+    json += F(",\"pressure\":");
+
+    if (latestSensorData.environmentalSensorValid)
+    {
+        json += String(
+            latestSensorData.pressure,
+            2
+        );
+    }
+    else
+    {
+        json += F("null");
+    }
+
+
+    /*
+     * Soil moisture.
+     */
+    json += F(",\"soilPercent\":");
+    json += String(
+        latestSensorData.soilPercent,
+        1
+    );
+
+    json += F(",\"soilStatus\":\"");
+    json += soilMoistureStatusToString(
+        latestSensorData.soilStatus
+    );
+    json += F("\"");
+
+
+    /*
+     * VPD.
+     */
+    json += F(",\"airVPD\":");
+
+    if (!isnan(latestAirVPD))
+    {
+        json += String(
+            latestAirVPD,
+            2
+        );
+    }
+    else
+    {
+        json += F("null");
+    }
+
+
+    json += F(",\"targetVPD\":");
+    json += String(
+        profile.targetVPD,
+        2
+    );
+
+    json += F(",\"minVPD\":");
+    json += String(
+        profile.minVPD,
+        2
+    );
+
+    json += F(",\"maxVPD\":");
+    json += String(
+        profile.maxVPD,
+        2
+    );
+
+
+    json += F(",\"vpdStatus\":\"");
+
+    if (latestControlState.controlValid)
+    {
+        json += vpdStatusToString(
+            latestControlState.vpdStatus
+        );
+    }
+    else
+    {
+        json += F("INVALID");
+    }
+
+    json += F("\"");
+
+
+    /*
+     * Controller state.
+     */
+    json += F(",\"mode\":\"");
+    json += controlModeToString(
+        getControlMode()
+    );
+    json += F("\"");
+
+
+    json += F(",\"growthStage\":\"");
+    json += profile.name;
+    json += F("\"");
+
+
+    json += F(",\"humidifier\":");
+    json += latestControlState.humidifierOn
+        ? F("true")
+        : F("false");
+
+
+    json += F(",\"controlValid\":");
+    json += latestControlState.controlValid
+        ? F("true")
+        : F("false");
+
+
+    json += F(",\"timingLock\":");
+    json += latestControlState.relayTimingLockout
+        ? F("true")
+        : F("false");
+
+
+    json += F(",\"rhSafety\":");
+    json += latestControlState.humiditySafetyActive
+        ? F("true")
+        : F("false");
+
+
+    /*
+     * Network information.
+     */
+    json += F(",\"wifiConnected\":");
+    json += WiFi.status() == WL_CONNECTED
+        ? F("true")
+        : F("false");
+
+
+    json += F(",\"ip\":\"");
+
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        json += WiFi.localIP().toString();
+    }
+
+    json += F("\"");
+
+
+    json += F(",\"rssi\":");
+
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        json += String(
+            WiFi.RSSI()
+        );
+    }
+    else
+    {
+        json += F("null");
+    }
+
+
+    /*
+     * Age of the latest sensor update.
+     */
+    json += F(",\"lastUpdateSeconds\":");
+    json += String(
+        (millis() - lastDataUpdateTime) / 1000
+    );
+
+
+    json += F("}");
+
+
+    server.sendHeader(
+        "Cache-Control",
+        "no-store"
+    );
+
+    server.send(
+        200,
+        "application/json",
+        json
+    );
+}
 
 /*
  * Handle invalid URLs.
@@ -710,6 +1008,24 @@ void initializeWebServer()
             "/",
             HTTP_GET,
             handleDashboard
+        );
+
+        /*
+         * Browser-side live dashboard script.
+         */
+        server.on(
+            "/dashboard.js",
+            HTTP_GET,
+            handleDashboardScript
+        );
+
+        /*
+         * Live dashboard data API.
+         */
+        server.on(
+            "/api/status",
+            HTTP_GET,
+            handleApiStatus
         );
 
         server.on(
