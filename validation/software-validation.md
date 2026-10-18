@@ -963,4 +963,76 @@ The implementation validated:
 
     web-control-pass.png
 
-   
+# SW-10 - Soil Moisture Status Classification
+
+## Objective
+
+Verify that the calibrated relative soil-moisture value is correctly
+classified into predefined status zones and that the corresponding status
+is displayed correctly on the local web dashboard.
+
+## Classification Zones
+
+The current provisional classification thresholds are:
+
+- VERY DRY: below 20%
+- DRY: 20% to below 35%
+- GOOD: 35% to below 60%
+- WET: 60% to below 80%
+- VERY WET: 80% and above
+
+These values are based on the current relative calibration scale and do not
+represent volumetric water content (VWC).
+
+The thresholds are provisional and may be refined after additional
+measurements from real soil samples.
+
+## Deterministic Validation
+
+The classification logic was tested independently from the physical sensor
+using fixed input values.
+
+The following cases were validated:
+
+- 10.0% -> VERY DRY
+- 20.0% -> DRY
+- 25.0% -> DRY
+- 35.0% -> GOOD
+- 45.0% -> GOOD
+- 60.0% -> WET
+- 65.2% -> WET
+- 80.0% -> VERY WET
+- 90.0% -> VERY WET
+
+All deterministic classification tests passed.
+
+## Dashboard Validation
+
+The soil-moisture status was also validated using live sensor measurements
+and the local web dashboard.
+
+Observed states included:
+
+- 8.7% -> VERY DRY
+- 25.0% -> DRY
+- 38.8% -> GOOD
+- 59.6% -> GOOD
+- 65.4% -> WET
+- 100.0% -> VERY WET
+
+The dashboard displayed the correct status label and corresponding visual
+badge for each tested state.
+
+## Result
+
+The soil-moisture classification logic and dashboard visualization operated
+correctly across all defined status zones.
+
+## Status
+
+- [x] PASS
+- [ ] FAIL
+
+## Evidence
+
+    soil-moisture-status-pass.png   

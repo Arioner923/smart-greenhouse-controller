@@ -47,6 +47,17 @@ constexpr uint8_t BME280_I2C_ADDRESS = 0x76;
 constexpr int SOIL_AIR_REFERENCE = 746;
 constexpr int SOIL_WATER_REFERENCE = 390;
 
+/*
+ * Provisional soil-moisture classification thresholds.
+ *
+ * These values will be refined using measurements
+ * from real soil samples during SW-10 validation.
+ */
+constexpr float SOIL_VERY_DRY_MAX_PERCENT = 20.0f;
+constexpr float SOIL_DRY_MAX_PERCENT      = 35.0f;
+constexpr float SOIL_GOOD_MAX_PERCENT     = 60.0f;
+constexpr float SOIL_WET_MAX_PERCENT      = 80.0f;
+
 
 /* =========================================================
  * Relay Configuration

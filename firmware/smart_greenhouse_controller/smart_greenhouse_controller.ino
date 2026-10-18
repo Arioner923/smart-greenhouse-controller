@@ -10,7 +10,6 @@
 #include "wifi_provisioning.h"
 #include "web_server.h"
 
-
 /*
  * Smart Greenhouse Controller
  * Main Application
@@ -211,12 +210,11 @@ static void printSystemStatus(
     }
 }
 
-
 void setup()
 {
     Serial.begin(SERIAL_BAUD_RATE);
 
-    delay(500);
+    delay(1000);
 
     Serial.println();
     Serial.println("================================");

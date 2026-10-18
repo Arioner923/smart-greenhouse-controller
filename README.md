@@ -248,6 +248,9 @@ are stored in the `validation` documentation.
 - [x] Local mDNS hostname access validated
 - [x] Web control validated after Wi-Fi provisioning
 - [x] Web-based control validated
+- [x] Soil moisture status classification implemented
+- [x] Soil moisture visual status validated
+- [x] Soil moisture classification boundaries validated
 
 ### Hardware Validation
 

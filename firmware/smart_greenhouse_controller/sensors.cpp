@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "sensors.h"
+#include "soil_moisture.h"
 
 
 /*
@@ -114,6 +115,14 @@ SensorData readSensors()
      * Convert RAW soil reading to the calibrated relative scale.
      */
     data.soilPercent = convertSoilRawToPercent(data.soilRaw);
+
+    /*
+    * Classify the calibrated soil-moisture value.
+    */
+    data.soilStatus =
+        classifySoilMoisture(
+            data.soilPercent
+        );
 
     /*
      * Check whether the required environmental measurements

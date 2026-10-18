@@ -7,6 +7,7 @@
 #include "control.h"
 #include "web_server.h"
 #include "dashboard_page.h"
+#include "soil_moisture.h"
 
 
 /*
@@ -191,11 +192,64 @@ static void handleDashboard()
             "<div class='value'>"
         ));
 
-        sendHtml(String(latestSensorData.soilPercent, 1));
+        sendHtml(
+            String(
+                latestSensorData.soilPercent,
+                1
+            )
+        );
 
         sendHtml(F(
             " %"
-            "</div></div>"
+            "</div>"
+            "<div style='margin-top:10px;'>"
+        ));
+
+        switch (latestSensorData.soilStatus)
+        {
+            case SoilMoistureStatus::VeryDry:
+                sendHtml(F(
+                    "<div class='soil-badge soil-very-dry'>"
+                ));
+                break;
+
+            case SoilMoistureStatus::Dry:
+                sendHtml(F(
+                    "<div class='soil-badge soil-dry'>"
+                ));
+                break;
+
+            case SoilMoistureStatus::Good:
+                sendHtml(F(
+                    "<div class='soil-badge soil-good'>"
+                ));
+                break;
+
+            case SoilMoistureStatus::Wet:
+                sendHtml(F(
+                    "<div class='soil-badge soil-wet'>"
+                ));
+                break;
+
+            case SoilMoistureStatus::VeryWet:
+                sendHtml(F(
+                    "<div class='soil-badge soil-very-wet'>"
+                ));
+                break;
+        }
+
+        sendHtml(
+            String(
+                soilMoistureStatusToString(
+                    latestSensorData.soilStatus
+                )
+            )
+        );
+
+        sendHtml(F(
+            "</div>"
+            "</div>"
+            "</div>"
             "</div>"
         ));
 

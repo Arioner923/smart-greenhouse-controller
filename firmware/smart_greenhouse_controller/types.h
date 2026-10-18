@@ -43,6 +43,21 @@ struct VPDProfile
     float maxVPD;
 };
 
+/*
+ * Relative soil-moisture classification.
+ *
+ * The percentage is based on the calibrated relative
+ * sensor scale and does not represent volumetric
+ * water content (VWC).
+ */
+enum class SoilMoistureStatus
+{
+    VeryDry,
+    Dry,
+    Good,
+    Wet,
+    VeryWet
+};
 
 /*
  * Environmental and soil measurements collected by the sensor module.
@@ -58,6 +73,7 @@ struct SensorData
 
     int soilRaw;
     float soilPercent;
+    SoilMoistureStatus soilStatus;
 
     bool environmentalSensorValid;
 };
