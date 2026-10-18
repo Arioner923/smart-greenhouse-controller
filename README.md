@@ -132,9 +132,14 @@ with additional measurements from the actual growing medium.
 
 ## VPD Profiles
 
-The current firmware contains three configurable growth-stage profiles.
-Runtime growth-stage selection is planned; at present the startup profile is
-selected in `config.h`.
+The firmware contains three configurable growth-stage profiles.
+
+The active growth stage can be selected at runtime from the local web
+dashboard without recompiling or uploading new firmware.
+
+A default growth stage is configured in `config.h`. Persistent controller
+settings are not implemented yet, so restarting the controller restores the
+configured default profile.
 
 | Growth Stage | Min VPD | Target VPD | Max VPD |
 |---|---:|---:|---:|
@@ -204,6 +209,8 @@ full architecture description.
 - [x] Local mDNS access
 - [x] Soil-moisture status classification
 - [x] Soil classification boundary validation
+- [x] Runtime growth-stage selection
+- [x] Runtime VPD-profile switching
 
 Validation notes and selected evidence are stored under `validation/`.
 
@@ -220,7 +227,6 @@ Validation notes and selected evidence are stored under `validation/`.
 
 Near-term development may include:
 
-- Runtime growth-stage selection
 - Persistent controller settings
 - MLX90614 leaf-temperature sensing
 - Leaf VPD

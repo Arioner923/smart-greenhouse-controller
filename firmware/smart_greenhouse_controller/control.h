@@ -31,6 +31,21 @@ void setControlMode(ControlMode mode);
  */
 ControlMode getControlMode();
 
+/*
+ * Change the active growth stage used by the VPD controller.
+ *
+ * The new VPD profile becomes effective during the next
+ * normal control cycle. Existing relay timing and safety
+ * protections remain active.
+ */
+void setGrowthStage(GrowthStage stage);
+
+
+/*
+ * Return the currently selected runtime growth stage.
+ */
+GrowthStage getGrowthStage();
+
 
 /*
  * Set the requested humidifier state while

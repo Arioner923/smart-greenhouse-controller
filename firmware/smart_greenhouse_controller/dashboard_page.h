@@ -169,6 +169,16 @@ background:#e5e7eb;
 color:#667085;
 }
 
+/*
+ * Growth-stage buttons are wider than the standard controls.
+ * Allow them to share the available row space and wrap cleanly
+ * on narrower screens.
+ */
+.btn-stage{
+flex:1 1 220px;
+text-align:center;
+}
+
 .soil-badge{
 display:inline-block;
 padding:6px 12px;

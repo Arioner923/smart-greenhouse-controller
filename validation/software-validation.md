@@ -1043,4 +1043,96 @@ correctly across all defined status zones.
 
 ## Evidence
 
-    soil-moisture-status-pass.png   
+    soil-moisture-status-pass.png
+
+# SW-11 - Runtime Growth Stage Selection
+
+## Objective
+
+Verify that the active growth stage and its associated VPD profile can be
+changed at runtime from the local web dashboard without recompiling or
+uploading new firmware.
+
+The implementation must preserve the existing automatic-control logic,
+relay timing protection, humidity safety protection and invalid-input
+fail-safe behavior.
+
+## Runtime Profiles
+
+The following growth-stage profiles were tested:
+
+### Propagation / Early Veg
+
+- Minimum VPD: 0.40 kPa
+- Target VPD: 0.60 kPa
+- Maximum VPD: 0.80 kPa
+
+### Late Veg / Early Flower
+
+- Minimum VPD: 0.80 kPa
+- Target VPD: 1.00 kPa
+- Maximum VPD: 1.20 kPa
+
+### Mid / Late Flower
+
+- Minimum VPD: 1.20 kPa
+- Target VPD: 1.40 kPa
+- Maximum VPD: 1.60 kPa
+
+## Dashboard Validation
+
+All three growth-stage controls were tested from the local web dashboard.
+
+Selecting a growth stage successfully updated:
+
+- The active growth-stage state
+- The Growth Stage dashboard value
+- The active growth-stage button
+- The Target VPD value
+- The VPD operating range
+- The VPD status used by the controller
+
+The profile changes occurred at runtime without requiring a firmware
+recompile, upload or controller restart.
+
+The automatic-control system continued to use the existing relay timing
+and safety protections after each profile change.
+
+## Restart Validation
+
+The controller was restarted after selecting a non-default growth stage.
+
+After restart, the active growth stage correctly returned to the configured
+default:
+
+    Mid / Late Flower
+
+This behavior is expected because persistent controller settings have not
+yet been implemented.
+
+Runtime changes currently remain active only until the controller restarts.
+
+## Result
+
+Runtime growth-stage selection operated correctly.
+
+The firmware successfully validated:
+
+- Runtime selection of all three growth stages
+- Runtime VPD-profile switching
+- Dashboard synchronization with the active profile
+- Live Target VPD updates
+- Live VPD range updates
+- Active growth-stage button feedback
+- Continued operation of the existing control and safety logic
+- Restoration of the configured default growth stage after restart
+
+## Status
+
+- [x] PASS
+- [ ] FAIL
+
+## Evidence
+
+    growth-stage-runtime-selection-pass.png
+

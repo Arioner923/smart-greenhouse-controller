@@ -110,23 +110,19 @@ constexpr float MAX_SAFE_HUMIDITY_PERCENT = 85.0f;
 
 
 /* =========================================================
- * Growth Stage Selection
+ * Growth Stage Configuration
  * =========================================================
  *
- * For the first firmware version, the growth stage is selected
- * here during compilation.
+ * Default growth stage selected when the controller starts.
  *
- * Runtime growth-stage selection is planned for a later firmware step.
- * Until then, changing this value requires recompiling the firmware.
- * 
- * Select ONE growth stage:
+ * The active growth stage can be changed at runtime through
+ * the control module without recompiling the firmware.
  *
- * GrowthStage::PropagationEarlyVeg
- * GrowthStage::LateVegEarlyFlower
- * GrowthStage::MidLateFlower
+ * Persistent storage is not implemented yet, so a restart
+ * restores this default value.
  */
 
-constexpr GrowthStage SELECTED_GROWTH_STAGE =
+constexpr GrowthStage DEFAULT_GROWTH_STAGE =
     GrowthStage::MidLateFlower;
 
 

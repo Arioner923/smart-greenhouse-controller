@@ -450,6 +450,105 @@ static void handleDashboard()
         sendHtml(F(
             "</div>"
             "</div>"
+        ));
+
+
+        /* =====================================================
+        * Growth Stage Selection
+        * =====================================================
+        *
+        * All three forms are always present in the DOM.
+        * The initially active stage is highlighted here,
+        * while dashboard_script.h keeps the visual state
+        * synchronized with /api/status during runtime.
+        */
+        sendHtml(F(
+            "<div class='card' style='margin-top:14px;'>"
+            "<div class='label'>Growth Stage</div>"
+            "<div class='controls'>"
+        ));
+
+        if (getGrowthStage() == GrowthStage::PropagationEarlyVeg)
+        {
+            sendHtml(F(
+                "<form method='POST' "
+                "action='/control/growth-stage/propagation-early-veg'>"
+                "<button id='growthStagePropagationButton' "
+                "class='btn btn-primary btn-stage' type='submit'>"
+                "PROPAGATION / EARLY VEG"
+                "</button>"
+                "</form>"
+            ));
+        }
+        else
+        {
+            sendHtml(F(
+                "<form method='POST' "
+                "action='/control/growth-stage/propagation-early-veg'>"
+                "<button id='growthStagePropagationButton' "
+                "class='btn btn-secondary btn-stage' type='submit'>"
+                "PROPAGATION / EARLY VEG"
+                "</button>"
+                "</form>"
+            ));
+        }
+
+
+        if (getGrowthStage() == GrowthStage::LateVegEarlyFlower)
+        {
+            sendHtml(F(
+                "<form method='POST' "
+                "action='/control/growth-stage/late-veg-early-flower'>"
+                "<button id='growthStageLateVegButton' "
+                "class='btn btn-primary btn-stage' type='submit'>"
+                "LATE VEG / EARLY FLOWER"
+                "</button>"
+                "</form>"
+            ));
+        }
+        else
+        {
+            sendHtml(F(
+                "<form method='POST' "
+                "action='/control/growth-stage/late-veg-early-flower'>"
+                "<button id='growthStageLateVegButton' "
+                "class='btn btn-secondary btn-stage' type='submit'>"
+                "LATE VEG / EARLY FLOWER"
+                "</button>"
+                "</form>"
+            ));
+        }
+
+
+        if (getGrowthStage() == GrowthStage::MidLateFlower)
+        {
+            sendHtml(F(
+                "<form method='POST' "
+                "action='/control/growth-stage/mid-late-flower'>"
+                "<button id='growthStageMidLateButton' "
+                "class='btn btn-primary btn-stage' type='submit'>"
+                "MID / LATE FLOWER"
+                "</button>"
+                "</form>"
+            ));
+        }
+        else
+        {
+            sendHtml(F(
+                "<form method='POST' "
+                "action='/control/growth-stage/mid-late-flower'>"
+                "<button id='growthStageMidLateButton' "
+                "class='btn btn-secondary btn-stage' type='submit'>"
+                "MID / LATE FLOWER"
+                "</button>"
+                "</form>"
+            ));
+        }
+
+
+        sendHtml(F(
+            "</div>"
+            "</div>"
 
             "<div class='card' style='margin-top:14px;'>"
             "<div class='label'>Manual Humidifier Control</div>"
@@ -941,6 +1040,68 @@ static void handleModeManual()
     redirectToDashboard();
 }
 
+/* =========================================================
+ * Growth Stage Control
+ * =========================================================
+ */
+
+
+/*
+ * Select the Propagation / Early Veg growth stage.
+ *
+ * The control module changes the active VPD profile at runtime.
+ * Relay timing and safety protections remain active and the
+ * new profile is evaluated during the next normal control cycle.
+ */
+static void handleGrowthStagePropagationEarlyVeg()
+{
+    setGrowthStage(
+        GrowthStage::PropagationEarlyVeg
+    );
+
+    Serial.println();
+    Serial.println(
+        "WEB COMMAND: Growth stage -> Propagation / Early Veg"
+    );
+
+    redirectToDashboard();
+}
+
+
+/*
+ * Select the Late Veg / Early Flower growth stage.
+ */
+static void handleGrowthStageLateVegEarlyFlower()
+{
+    setGrowthStage(
+        GrowthStage::LateVegEarlyFlower
+    );
+
+    Serial.println();
+    Serial.println(
+        "WEB COMMAND: Growth stage -> Late Veg / Early Flower"
+    );
+
+    redirectToDashboard();
+}
+
+
+/*
+ * Select the Mid / Late Flower growth stage.
+ */
+static void handleGrowthStageMidLateFlower()
+{
+    setGrowthStage(
+        GrowthStage::MidLateFlower
+    );
+
+    Serial.println();
+    Serial.println(
+        "WEB COMMAND: Growth stage -> Mid / Late Flower"
+    );
+
+    redirectToDashboard();
+}
 
 /*
  * Request humidifier ON while operating in Manual mode.
@@ -1038,6 +1199,27 @@ void initializeWebServer()
             "/control/mode/manual",
             HTTP_POST,
             handleModeManual
+        );
+
+        /*
+        * Runtime growth-stage selection.
+        */
+        server.on(
+            "/control/growth-stage/propagation-early-veg",
+            HTTP_POST,
+            handleGrowthStagePropagationEarlyVeg
+        );
+
+        server.on(
+            "/control/growth-stage/late-veg-early-flower",
+            HTTP_POST,
+            handleGrowthStageLateVegEarlyFlower
+        );
+
+        server.on(
+            "/control/growth-stage/mid-late-flower",
+            HTTP_POST,
+            handleGrowthStageMidLateFlower
         );
 
         server.on(

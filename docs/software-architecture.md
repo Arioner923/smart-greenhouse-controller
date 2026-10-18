@@ -351,7 +351,6 @@ application without requiring those clients to parse the HTML dashboard.
 
 The current prototype intentionally does not yet include:
 
-- Runtime growth-stage selection
 - Persistent controller settings beyond Wi-Fi credentials
 - User authentication for the local dashboard
 - TLS / HTTPS on the ESP8266 web interface

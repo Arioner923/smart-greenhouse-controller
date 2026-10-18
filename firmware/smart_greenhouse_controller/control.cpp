@@ -32,6 +32,15 @@ static bool manualHumidifierRequest = false;
 static ControlMode currentControlMode =
     DEFAULT_CONTROL_MODE;
 
+/*
+ * Active runtime growth stage.
+ *
+ * Unlike the startup default stored in config.h, this value
+ * may change while the controller is running.
+ */
+static GrowthStage currentGrowthStage =
+    DEFAULT_GROWTH_STAGE;
+
 static unsigned long lastRelayStateChangeTime = 0;
 
 
@@ -106,6 +115,37 @@ static bool canTurnHumidifierOff()
         MIN_RELAY_ON_TIME_MS;
 }
 
+/* =========================================================
+ * Growth Stage
+ * =========================================================
+ */
+
+
+/*
+ * Change the active runtime growth stage.
+ *
+ * The corresponding VPD profile becomes effective during
+ * the next normal control cycle. Relay timing and safety
+ * protections are not bypassed by a stage change.
+ */
+void setGrowthStage(GrowthStage stage)
+{
+    if (currentGrowthStage == stage)
+    {
+        return;
+    }
+
+    currentGrowthStage = stage;
+}
+
+
+/*
+ * Return the currently selected runtime growth stage.
+ */
+GrowthStage getGrowthStage()
+{
+    return currentGrowthStage;
+}
 
 /* =========================================================
  * VPD Profile
@@ -114,7 +154,7 @@ static bool canTurnHumidifierOff()
 
 const VPDProfile& getActiveVPDProfile()
 {
-    switch (SELECTED_GROWTH_STAGE)
+    switch (currentGrowthStage)
     {
         case GrowthStage::PropagationEarlyVeg:
             return VPD_PROFILES[0];
@@ -126,6 +166,9 @@ const VPDProfile& getActiveVPDProfile()
             return VPD_PROFILES[2];
     }
 
+    /*
+     * Defensive fallback for an unexpected enum value.
+     */
     return VPD_PROFILES[0];
 }
 
@@ -150,7 +193,10 @@ void initializeControl()
     currentControlMode =
         DEFAULT_CONTROL_MODE;
 
-    lastRelayStateChangeTime = millis();
+        currentGrowthStage =
+            DEFAULT_GROWTH_STAGE;
+
+        lastRelayStateChangeTime = millis();
 }
 
 

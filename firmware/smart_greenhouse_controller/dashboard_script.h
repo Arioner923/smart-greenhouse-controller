@@ -126,6 +126,67 @@ function updateModeButtons(mode)
     }
 }
 
+/*
+ * Highlight the currently active growth stage.
+ *
+ * The displayed state follows /api/status so the buttons remain
+ * synchronized with the runtime VPD profile used by the controller.
+ */
+function updateGrowthStageButtons(stage)
+{
+    const propagationButton =
+        document.getElementById(
+            'growthStagePropagationButton'
+        );
+
+    const lateVegButton =
+        document.getElementById(
+            'growthStageLateVegButton'
+        );
+
+    const midLateButton =
+        document.getElementById(
+            'growthStageMidLateButton'
+        );
+
+    if (
+        !propagationButton ||
+        !lateVegButton ||
+        !midLateButton
+    )
+    {
+        return;
+    }
+
+    /*
+     * Reset all buttons before highlighting the active stage.
+     */
+    propagationButton.className =
+        'btn btn-secondary btn-stage';
+
+    lateVegButton.className =
+        'btn btn-secondary btn-stage';
+
+    midLateButton.className =
+        'btn btn-secondary btn-stage';
+
+    if (stage === 'Propagation / Early Veg')
+    {
+        propagationButton.className =
+            'btn btn-primary btn-stage';
+    }
+    else if (stage === 'Late Veg / Early Flower')
+    {
+        lateVegButton.className =
+            'btn btn-primary btn-stage';
+    }
+    else if (stage === 'Mid / Late Flower')
+    {
+        midLateButton.className =
+            'btn btn-primary btn-stage';
+    }
+}
+
 
 /*
  * Manual actuator controls are available only in MANUAL mode.
@@ -262,6 +323,10 @@ async function updateDashboard()
 
         setText(
             'growthStageValue',
+            data.growthStage
+        );
+
+        updateGrowthStageButtons(
             data.growthStage
         );
 
