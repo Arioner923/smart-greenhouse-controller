@@ -6,11 +6,15 @@
 #include "types.h"
 #include "control.h"
 #include "web_server.h"
+#include "dashboard_page.h"
 
 
 /*
  * Smart Greenhouse Controller
  * Local Web Dashboard + Web Control
+ *
+ * Static dashboard HTML/CSS is stored in dashboard_page.h (PROGMEM).
+ * Dynamic values and HTTP control routes remain in this module.
  *
  * The page is sent in small HTTP chunks instead of being assembled as one
  * large String. This avoids large contiguous RAM allocations on ESP8266.
@@ -107,174 +111,11 @@ static void handleDashboard()
     server.setContentLength(CONTENT_LENGTH_UNKNOWN);
     server.send(200, "text/html", "");
 
-    sendHtml(F(
-        "<!DOCTYPE html>"
-        "<html>"
-        "<head>"
-        "<meta charset='UTF-8'>"
-        "<meta name='viewport' content='width=device-width,initial-scale=1'>"
-        "<meta http-equiv='refresh' content='3'>"
-        "<title>Smart Greenhouse</title>"
-        
-        "<style>"
-        "body{"
-        "margin:0;"
-        "font-family:Arial,sans-serif;"
-        "background:#f4f7f5;"
-        "color:#1f2933;"
-        "}"
-
-        ".container{"
-        "max-width:900px;"
-        "margin:auto;"
-        "padding:20px;"
-        "}"
-
-        "header{"
-        "background:#ffffff;"
-        "padding:22px;"
-        "border-radius:14px;"
-        "margin-bottom:18px;"
-        "box-shadow:0 2px 10px rgba(0,0,0,.08);"
-
-        "}"
-        "h1{"
-        "margin:0 0 6px 0;"
-        "font-size:28px;"
-        "}"
-        
-        ".subtitle{"
-        "color:#667085;"
-        "}"
-
-        ".grid{"
-        "display:grid;"
-        "grid-template-columns:repeat(auto-fit,minmax(190px,1fr));"
-        "gap:14px;"
-        "margin-bottom:18px;"
-        "}"
-
-        ".card{"
-        "background:#ffffff;"
-        "padding:18px;"
-        "border-radius:14px;"
-        "box-shadow:0 2px 10px rgba(0,0,0,.07);"
-        "}"
-
-        ".label{"
-        "font-size:13px;"
-        "color:#667085;"
-        "margin-bottom:8px;"
-        "}"
-        
-        ".value{"
-        "font-size:25px;"
-        "font-weight:bold;"
-        "}"
-
-        ".section-title{"
-        "font-size:18px;"
-        "font-weight:bold;"
-        "margin:22px 0 10px;"
-        "}"
-
-        ".status{"
-        "font-weight:bold;"
-        "}"
-
-        ".footer{"
-        "text-align:center;"
-        "color:#667085;"
-        "font-size:12px;"
-        "padding:18px;"
-        "}"
-
-        ".controls{"
-        "display:flex;"
-        "gap:10px;"
-        "flex-wrap:wrap;"
-        "}"
-
-        ".btn{"
-        "border:0;"
-        "border-radius:10px;"
-        "padding:12px 18px;"
-        "font-size:16px;"
-        "font-weight:bold;"
-        "cursor:pointer;"
-        "}"
-
-        ".btn-primary{"
-        "background:#1f2933;"
-        "color:white;"
-        "}"
-
-        ".btn-secondary{"
-        "background:#e5e7eb;"
-        "color:#1f2933;"
-        "}"
-
-        ".btn-danger{"
-        "background:#b42318;"
-        "color:white;"
-        "}"
-
-        ".btn-success{"
-        "background:#067647;"
-        "color:white;"
-        "}"
-
-        ".btn:disabled{"
-        "opacity:.4;"
-        "cursor:not-allowed;"
-        "}"
-
-        "form{"
-        "margin:0;"
-        "}"
-
-        ".state-badge{"
-        "display:inline-block;"
-        "padding:8px 16px;"
-        "border-radius:999px;"
-        "font-size:22px;"
-        "font-weight:bold;"
-        "}"
-
-        ".state-on{"
-        "background:#d1fae5;"
-        "color:#067647;"
-        "}"
-
-        ".state-off{"
-        "background:#e5e7eb;"
-        "color:#344054;"
-        "}"
-
-        ".btn-active-on{"
-        "background:#067647;"
-        "color:white;"
-        "}"
-
-        ".btn-active-off{"
-        "background:#344054;"
-        "color:white;"
-        "}"
-
-        ".btn-inactive{"
-        "background:#e5e7eb;"
-        "color:#667085;"
-        "}"
-
-        "</style>"
-        "</head>"
-        "<body>"
-        "<div class='container'>"
-        "<header>"
-        "<h1>Smart Greenhouse</h1>"
-        "<div class='subtitle'>Local Monitoring Dashboard</div>"
-        "</header>"
-    ));
+    /*
+     * Send the static dashboard shell directly from flash.
+     */
+    server.sendContent_P(DASHBOARD_PAGE_START);
+    yield();
 
 
     if (!dashboardDataAvailable)
@@ -669,11 +510,11 @@ static void handleDashboard()
         ));
     }
 
-    sendHtml(F(
-        "</div>"
-        "</body>"
-        "</html>"
-    ));
+    /*
+     * Close the static dashboard shell from flash.
+     */
+    server.sendContent_P(DASHBOARD_PAGE_END);
+    yield();
 
     /* Final zero-length chunk terminates the HTTP chunked response. */
     server.sendContent(String());
