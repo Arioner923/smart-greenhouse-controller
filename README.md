@@ -240,7 +240,14 @@ are stored in the `validation` documentation.
 - [x] Automatic dashboard refresh validated
 - [x] Controller status display validated
 - [x] Network status display validated
-- [ ] Web-based control validated
+- [x] Web-based operating mode control validated
+- [x] Manual humidifier ON/OFF control validated
+- [x] Manual control disabled in AUTO mode
+- [x] Controller state feedback validated
+- [x] Visual actuator-state feedback implemented
+- [x] Local mDNS hostname access validated
+- [x] Web control validated after Wi-Fi provisioning
+- [x] Web-based control validated
 
 ### Hardware Validation
 

@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
 #include <WiFiManager.h>
 
 #include "config.h"
@@ -10,6 +11,12 @@
  * WiFiManager instance used by this module.
  */
 static WiFiManager wifiManager;
+
+/*
+ * Tracks whether the local mDNS responder
+ * is currently active.
+ */
+static bool mdnsStarted = false;
 
 
 /*
@@ -48,6 +55,56 @@ static void onConfigPortalStarted(WiFiManager* manager)
     Serial.println();
 }
 
+/*
+ * Start the local mDNS service when Wi-Fi
+ * connectivity becomes available.
+ *
+ * This allows the dashboard to be reached using:
+ *
+ * http://smartgreenhouse.local/
+ *
+ * instead of requiring the user to know the
+ * dynamically assigned IP address.
+ */
+static void startMDNSIfPossible()
+{
+    if (WiFi.status() != WL_CONNECTED)
+    {
+        return;
+    }
+
+    if (mdnsStarted)
+    {
+        return;
+    }
+
+    if (!MDNS.begin(WIFI_MDNS_HOSTNAME))
+    {
+        Serial.println(
+            "mDNS initialization: FAILED"
+        );
+
+        return;
+    }
+
+    /*
+     * Advertise the local HTTP dashboard.
+     */
+    MDNS.addService(
+        "http",
+        "tcp",
+        80
+    );
+
+    mdnsStarted = true;
+
+    Serial.println();
+    Serial.println("mDNS initialization: PASS");
+
+    Serial.print("Local hostname     : http://");
+    Serial.print(WIFI_MDNS_HOSTNAME);
+    Serial.println(".local/");
+}
 
 bool initializeWiFiProvisioning()
 {
@@ -59,6 +116,12 @@ bool initializeWiFiProvisioning()
      */
     WiFi.mode(WIFI_STA);
 
+    /*
+    * Friendly DHCP/device hostname.
+    */
+    WiFi.hostname(
+        WIFI_MDNS_HOSTNAME
+    );
 
     /*
      * Keep the configuration portal non-blocking.
@@ -128,6 +191,11 @@ bool initializeWiFiProvisioning()
 
     printWiFiStatus();
 
+    /*
+    * Start local hostname service.
+    */
+    startMDNSIfPossible();
+
     return true;
 }
 
@@ -182,8 +250,49 @@ void clearWiFiCredentials()
 void processWiFiProvisioning()
 {
     /*
-     * Required when WiFiManager operates
-     * in non-blocking mode.
+     * Required for non-blocking WiFiManager.
      */
     wifiManager.process();
+
+
+    /*
+     * Wi-Fi connected or reconnected.
+     */
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        /*
+         * Start mDNS if this connection became
+         * available after boot or provisioning.
+         */
+        startMDNSIfPossible();
+
+
+        /*
+         * Keep the mDNS responder active.
+         */
+        if (mdnsStarted)
+        {
+            MDNS.update();
+        }
+
+        return;
+    }
+
+
+    /*
+     * Wi-Fi was lost.
+     *
+     * Stop the old mDNS responder so that it can
+     * be cleanly recreated after reconnection.
+     */
+    if (mdnsStarted)
+    {
+        MDNS.close();
+
+        mdnsStarted = false;
+
+        Serial.println(
+            "mDNS stopped: Wi-Fi unavailable"
+        );
+    }
 }

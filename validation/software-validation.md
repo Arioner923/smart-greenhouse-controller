@@ -812,3 +812,155 @@ Serial Monitor evidence:
     wifi-provisioning-pass.png
     wifi-offline-reconnect-pass.png
 
+# SW-08 - Local Web Dashboard
+
+## Objective
+
+Verify that the Smart Greenhouse Controller can provide a local read-only
+web dashboard for real-time monitoring over the local Wi-Fi network.
+
+## Test Results
+
+The dashboard was successfully opened from a mobile device connected to
+the same local network as the ESP8266.
+
+The dashboard displayed:
+
+- Air temperature
+- Relative humidity
+- Atmospheric pressure
+- Soil moisture
+- Air VPD
+- Target VPD
+- VPD operating range
+- VPD status
+- Operating mode
+- Growth stage
+- Humidifier state
+- Control state
+- Relay timing lock status
+- Humidity safety status
+- Wi-Fi connection state
+- Local IP address
+- Wi-Fi signal information
+
+The displayed values matched the measurements reported through the Serial
+Monitor.
+
+The page automatically refreshed every 3 seconds and displayed updated
+sensor and controller values without requiring manual browser refresh.
+
+## Result
+
+The local monitoring dashboard operated correctly.
+
+The firmware successfully validated:
+
+- Local HTTP server operation
+- Mobile browser access
+- Live environmental data display
+- Soil moisture display
+- VPD monitoring
+- Controller-state monitoring
+- Network-state monitoring
+- Automatic dashboard refresh
+- Full-page rendering on mobile
+
+## Status
+
+- [x] PASS
+- [ ] FAIL
+
+## Evidence
+
+    local-web-dashboard-pass.png
+
+# SW-09 - Web-based Control
+
+## Objective
+
+Verify that the Smart Greenhouse Controller can safely change controller
+operating modes and issue manual humidifier commands through the local
+web dashboard without bypassing the existing control and safety logic.
+
+## Test Results
+
+The local web dashboard successfully provided controls for:
+
+- Automatic operating mode
+- Manual operating mode
+- Manual humidifier ON command
+- Manual humidifier OFF command
+
+Manual humidifier commands were available only while the controller was
+operating in Manual mode.
+
+While Automatic mode was active, the manual actuator controls were
+disabled.
+
+Operating-mode changes and humidifier commands were processed through
+the existing control module rather than directly controlling the relay
+from the web-server layer.
+
+The following existing protections remained active:
+
+- Relay minimum ON/OFF timing protection
+- Relative-humidity safety protection
+- Invalid-input fail-safe behavior
+- Safe operating-mode transitions
+
+The dashboard was also updated to provide visual feedback for the actual
+controller state.
+
+The selected AUTO or MANUAL operating mode is visually highlighted.
+
+In Manual mode, the ON or OFF button corresponding to the actual
+humidifier relay state is highlighted.
+
+The Humidifier status card also provides visual state feedback:
+
+- ON: green status indication
+- OFF: neutral status indication
+
+The visual state is based on the actual controller output rather than
+only the requested command.
+
+This means that during a relay timing lock, the dashboard continues to
+display the real actuator state until the requested state is actually
+applied.
+
+Local dashboard access was also validated using the mDNS hostname:
+
+    http://smartgreenhouse.local/
+
+The controller was successfully provisioned and operated on another
+Wi-Fi network without requiring access to the router configuration or
+the Serial Monitor.
+
+## Result
+
+Web-based controller operation functioned correctly.
+
+The implementation validated:
+
+- AUTO to MANUAL mode switching
+- MANUAL to AUTO mode switching
+- Manual humidifier ON control
+- Manual humidifier OFF control
+- Manual-command blocking in Automatic mode
+- Preservation of controller safety protections
+- Actual actuator-state feedback
+- Operating-mode visual feedback
+- Local mDNS dashboard access
+- Web control after Wi-Fi provisioning
+
+## Status
+
+- [x] PASS
+- [ ] FAIL
+
+## Evidence
+
+    web-control-pass.png
+
+   

@@ -182,6 +182,15 @@ constexpr char WIFI_SETUP_AP_PASSWORD[] =
     "Greenhouse123";
 
 /*
+ * Local network hostname.
+ *
+ * The dashboard can normally be accessed at:
+ *
+ * http://smartgreenhouse.local/
+ */
+constexpr char WIFI_MDNS_HOSTNAME[] =
+    "smartgreenhouse";
+/*
  * Maximum time that the configuration portal
  * remains active before returning control
  * to the main firmware.
